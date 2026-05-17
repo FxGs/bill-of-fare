@@ -1,0 +1,35 @@
+categories:
+  - name: Roll
+    items:
+      - name: Chicken Roll
+        variants:
+          - name: Regular
+            price: 80
+          - name: Cheese
+            price: 100
+      - name: Veg Roll
+        variants:
+          - name: Regular
+            price: 60
+  - name: Pizza
+    items:
+      - name: Margherita
+        variants:
+          - name: Small
+            price: 180
+          - name: Large
+            price: 320
+  - name: Momos
+    items:
+      - name: Chicken Momos
+        variants:
+          - name: Steamed
+            price: 120
+          - name: Fried
+            price: 140
+  - name: Mocktail
+    items:
+      - name: Virgin Mojito
+        variants:
+          - name: Regular
+            price: 110

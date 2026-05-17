@@ -1,0 +1,52 @@
+package models
+
+import "time"
+
+type Category struct {
+	ID    int
+	Name  string
+	Items []MenuItem
+	Menu  []MenuGroup
+}
+
+type MenuGroup struct {
+	Name     string
+	Variants []VariantOption
+}
+
+type VariantOption struct {
+	ID      int
+	Label   string
+	Price   int
+	HasName bool
+}
+
+type MenuItem struct {
+	ID           int
+	CategoryID   int
+	CategoryName string
+	Name         string
+	Variant      string
+	Price        int
+}
+
+type CartItem struct {
+	Key      string
+	MenuItem MenuItem
+	Quantity int
+	Subtotal int
+}
+
+type Invoice struct {
+	ID        int
+	CreatedAt time.Time
+	Items     []InvoiceItem
+	Total     int
+}
+
+type InvoiceItem struct {
+	ItemName  string
+	Quantity  int
+	UnitPrice int
+	Subtotal  int
+}

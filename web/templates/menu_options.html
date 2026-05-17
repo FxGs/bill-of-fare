@@ -1,0 +1,16 @@
+{{define "menu-options"}}
+<div>
+  <h6 class="mb-3">{{.Group.Name}}</h6>
+  <div class="list-group">
+    {{range .Group.Variants}}
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <div>{{if .HasName}}{{.Label}}{{else}}Regular{{end}}</div>
+        <small class="text-muted">₹{{.Price}}</small>
+      </div>
+      <button class="btn btn-sm btn-success" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" data-bs-dismiss="modal">Add</button>
+    </div>
+    {{end}}
+  </div>
+</div>
+{{end}}

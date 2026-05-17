@@ -1,0 +1,47 @@
+.app-shell {
+  background: #f6f8fb;
+}
+
+.menu-category {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 3px 12px rgba(20, 30, 50, 0.06);
+}
+
+.category-title {
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.menu-card {
+  border: 1px solid #e9edf3;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(26, 35, 52, 0.08);
+}
+
+.receipt-58mm {
+  width: 58mm;
+  max-width: 58mm;
+  margin: 0 auto;
+  padding: 2mm;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.receipt-58mm h6 { font-size: 14px; }
+.receipt-table th, .receipt-table td { padding: 2px 0; vertical-align: top; word-break: break-word; }
+.receipt-table th:first-child, .receipt-table td:first-child { width: 62%; }
+.total-row { font-size: 13px; }
+
+@page { size: 58mm auto; margin: 0; }
+
+@media print {
+  body { margin: 0; padding: 0; width: 58mm; }
+  .receipt-58mm { margin: 0; padding: 1.5mm; width: 58mm; max-width: 58mm; }
+  .no-print, .btn { display: none !important; }
+}
