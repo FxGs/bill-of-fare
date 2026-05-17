@@ -1,0 +1,53 @@
+.receipt-58mm {
+  width: 58mm;
+  max-width: 58mm;
+  margin: 0 auto;
+  padding: 2mm;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.receipt-58mm h6 {
+  font-size: 14px;
+}
+
+.receipt-table th,
+.receipt-table td {
+  padding: 2px 0;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.receipt-table th:first-child,
+.receipt-table td:first-child {
+  width: 62%;
+}
+
+.total-row {
+  font-size: 13px;
+}
+
+@page {
+  size: 58mm auto;
+  margin: 0;
+}
+
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    width: 58mm;
+  }
+
+  .receipt-58mm {
+    margin: 0;
+    padding: 1.5mm;
+    width: 58mm;
+    max-width: 58mm;
+  }
+
+  .no-print,
+  .btn {
+    display: none !important;
+  }
+}
