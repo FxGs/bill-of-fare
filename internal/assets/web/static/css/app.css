@@ -1,0 +1,3 @@
+@media print {
+  .btn { display: none !important; }
+}

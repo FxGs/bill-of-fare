@@ -1,0 +1,5 @@
+{{define "cart"}}
+<div class="card"><div class="card-header">Cart</div><div class="card-body">
+{{if .CartItems}}<ul class="list-group mb-3">{{range .CartItems}}<li class="list-group-item"><div class="d-flex justify-content-between"><div>{{.MenuItem.Name}}{{if .MenuItem.Variant}} ({{.MenuItem.Variant}}){{end}}<br><small>₹{{.MenuItem.Price}} × {{.Quantity}}</small></div><div>₹{{.Subtotal}}</div></div><div class="mt-2"><button class="btn btn-sm btn-outline-secondary" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"1"}' hx-target="#cart">+</button><button class="btn btn-sm btn-outline-secondary" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"-1"}' hx-target="#cart">-</button><button class="btn btn-sm btn-outline-danger" hx-post="/cart/remove" hx-vals='{"key":"{{.Key}}"}' hx-target="#cart">Remove</button></div></li>{{end}}</ul><h5>Total: ₹{{.Total}}</h5><form action="/invoice/create" method="post"><button class="btn btn-success">Generate Invoice</button></form>{{else}}<p class="mb-0">Cart is empty.</p>{{end}}
+</div></div>
+{{end}}

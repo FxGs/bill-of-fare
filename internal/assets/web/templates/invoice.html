@@ -1,0 +1,5 @@
+{{define "invoice"}}
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Invoice #{{.Invoice.ID}}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"><link href="/static/css/app.css" rel="stylesheet"></head>
+<body><div class="container py-4 invoice"><h2>Invoice #{{.Invoice.ID}}</h2><p>Created at: {{.Invoice.CreatedAt}}</p><table class="table"><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Subtotal</th></tr></thead><tbody>{{range .Invoice.Items}}<tr><td>{{.ItemName}}</td><td>{{.Quantity}}</td><td>₹{{.UnitPrice}}</td><td>₹{{.Subtotal}}</td></tr>{{end}}</tbody></table><h4>Total: ₹{{.Invoice.Total}}</h4><button class="btn btn-primary" onclick="window.print()">Print</button> <a href="/" class="btn btn-secondary">Back</a></div></body></html>
+{{end}}
