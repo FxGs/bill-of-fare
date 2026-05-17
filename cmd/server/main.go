@@ -14,14 +14,8 @@ import (
 )
 
 func main() {
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "bill_of_fare.db"
-	}
-	database, err := db.Open(dbPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	dbPath := os.Getenv("DB_PATH"); if dbPath == "" { dbPath = "bill_of_fare.db" }
+	database, err := db.Open(dbPath); if err != nil { log.Fatal(err) }
 	defer database.Close()
 	tpl := template.Must(template.ParseFS(assets.FS, "web/templates/*.html"))
 	staticFS, _ := fs.Sub(assets.FS, "web/static")

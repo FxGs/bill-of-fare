@@ -6,19 +6,6 @@ type Category struct {
 	ID    int
 	Name  string
 	Items []MenuItem
-	Menu  []MenuGroup
-}
-
-type MenuGroup struct {
-	Name     string
-	Variants []VariantOption
-}
-
-type VariantOption struct {
-	ID      int
-	Label   string
-	Price   int
-	HasName bool
 }
 
 type MenuItem struct {
@@ -31,10 +18,10 @@ type MenuItem struct {
 }
 
 type CartItem struct {
-	Key      string
-	MenuItem MenuItem
-	Quantity int
-	Subtotal int
+	Key       string
+	MenuItem  MenuItem
+	Quantity  int
+	Subtotal  int
 }
 
 type Invoice struct {
