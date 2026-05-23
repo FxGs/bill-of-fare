@@ -1,46 +1,27 @@
-:root {
-  --panel-border: #e9edf6;
-}
-
 .app-shell {
-  background:
-    radial-gradient(circle at 10% 10%, rgba(13, 110, 253, 0.09), transparent 35%),
-    radial-gradient(circle at 90% 10%, rgba(111, 66, 193, 0.08), transparent 35%),
-    #f7f9fc;
-  min-height: 100vh;
-}
-
-.hero-panel {
-  background: linear-gradient(145deg, #ffffff, #f4f7ff);
-  border: 1px solid var(--panel-border);
-  box-shadow: 0 8px 24px rgba(20, 30, 50, 0.08);
+  background: #f6f8fb;
 }
 
 .menu-category {
   background: #fff;
-  border-radius: 1rem;
-  border: 1px solid var(--panel-border);
-  padding: 1rem;
-  box-shadow: 0 6px 18px rgba(20, 30, 50, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 3px 12px rgba(20, 30, 50, 0.06);
 }
 
 .category-title {
   font-weight: 700;
+  margin-bottom: 14px;
 }
 
 .menu-card {
-  background: linear-gradient(180deg, #fff, #fbfcff);
-  box-shadow: 0 5px 16px rgba(26, 35, 52, 0.08);
-  transition: transform .18s ease, box-shadow .18s ease;
+  border: 1px solid #e9edf3;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
 .menu-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(26, 35, 52, 0.12);
-}
-
-.cart-sticky {
-  top: 1rem;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(26, 35, 52, 0.08);
 }
 
 .receipt-58mm {
