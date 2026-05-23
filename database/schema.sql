@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS menu_items (
   name TEXT NOT NULL,
   variant TEXT,
   price INTEGER NOT NULL,
-  UNIQUE(category_id, name, COALESCE(variant, '')),
+  UNIQUE(category_id, name, variant),
   FOREIGN KEY(category_id) REFERENCES categories(id)
 );
 
