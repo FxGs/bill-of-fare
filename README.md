@@ -12,6 +12,20 @@ go run ./cmd/server
 
 Open http://localhost:8080
 
+## Dev
+
+Run with restart-on-change while editing Go, templates, CSS, schema, or seed files:
+
+```bash
+./scripts/dev.sh
+```
+
+Optional environment variables:
+
+```bash
+DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
+```
+
 ## Features
 - Menu display by category
 - Session cart (in-memory by session cookie)

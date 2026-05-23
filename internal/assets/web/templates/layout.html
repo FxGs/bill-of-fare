@@ -18,44 +18,86 @@
         <span>POS v1.0</span>
       </div>
     </div>
-    <div class="service-chip">Dine-in</div>
+    <div class="topbar-actions">
+      <button class="sales-button" onclick="document.getElementById('sales-modal').showModal()" hx-get="/sales" hx-target="#sales-modal-content" hx-swap="innerHTML">Sales</button>
+      <div class="service-chip">Dine-in</div>
+    </div>
   </header>
 
   <main class="pos-layout">
-    <section class="menu-pane">
-      <nav class="category-tabs" aria-label="Menu categories">
-        <a class="category-tab active" href="#all">All</a>
-        {{range .Categories}}
-        <a class="category-tab" href="#cat-{{.ID}}">{{.Name}}</a>
-        {{end}}
-      </nav>
-
-      <div id="all" class="menu-grid">
-        {{range .Categories}}
-        <div class="category-break" id="cat-{{.ID}}">
-          <span>{{.Name}}</span>
-        </div>
-        {{range .Items}}
-        <article class="menu-card">
-          <div>
-            <p class="menu-card-category">{{.CategoryName}}</p>
-            <h2>{{.Name}}</h2>
-            {{if .Variant}}<p class="menu-card-detail">{{.Variant}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}
-          </div>
-          <div class="menu-card-footer">
-            <strong>₹{{.Price}}</strong>
-            <button class="add-button" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" aria-label="Add {{.Name}}">Add</button>
-          </div>
-        </article>
-        {{end}}
-        {{end}}
-      </div>
-    </section>
+    {{template "menu-pane" .}}
 
     <aside class="order-pane">
       <div id="cart">{{template "cart" .}}</div>
     </aside>
   </main>
+
+  <dialog class="sales-modal" id="sales-modal">
+    <div id="sales-modal-content"></div>
+  </dialog>
 </body>
 </html>
+{{end}}
+
+{{define "menu-pane"}}
+<section class="menu-pane">
+  <nav class="category-tabs" aria-label="Menu categories">
+    <button class="category-tab {{if eq .SelectedCategoryID 0}}active{{end}}" hx-get="/menu" hx-target=".menu-pane" hx-swap="outerHTML">All</button>
+    {{range .Categories}}
+    <button class="category-tab {{if eq $.SelectedCategoryID .ID}}active{{end}}" hx-get="/menu?category_id={{.ID}}" hx-target=".menu-pane" hx-swap="outerHTML">{{.Name}}</button>
+    {{end}}
+  </nav>
+
+  <div id="menu-grid" class="menu-grid">
+    {{range .MenuCategories}}
+    <div class="category-break">
+      <span>{{.Name}}</span>
+    </div>
+    {{range .Items}}
+    <article class="menu-card">
+      <div>
+        <p class="menu-card-category">{{.CategoryName}}</p>
+        <h2>{{.Name}}</h2>
+        {{if .Variant}}<p class="menu-card-detail">{{.Variant}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}
+      </div>
+      <div class="menu-card-footer">
+        <strong>₹{{.Price}}</strong>
+        <button class="add-button" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" aria-label="Add {{.Name}}">Add</button>
+      </div>
+    </article>
+    {{end}}
+    {{end}}
+  </div>
+</section>
+{{end}}
+
+{{define "sales-summary"}}
+<section class="sales-card">
+  <div class="sales-header">
+    <div>
+      <p>Sales</p>
+      <span>Today and this session</span>
+    </div>
+    <form method="dialog">
+      <button class="modal-close" aria-label="Close">×</button>
+    </form>
+  </div>
+  <div class="sales-grid">
+    <div class="sales-metric">
+      <span>Today</span>
+      <strong>₹{{.TodaySales.Total}}</strong>
+      <small>{{.TodaySales.Count}} invoices</small>
+    </div>
+    <div class="sales-metric">
+      <span>This Session</span>
+      <strong>₹{{.SessionSales.Total}}</strong>
+      <small>{{.SessionSales.Count}} invoices</small>
+    </div>
+    <div class="sales-metric sales-metric-wide">
+      <span>Current Open Order</span>
+      <strong>₹{{.CurrentTotal}}</strong>
+      <small>Not counted until invoice is printed</small>
+    </div>
+  </div>
+</section>
 {{end}}

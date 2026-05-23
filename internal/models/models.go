@@ -18,10 +18,10 @@ type MenuItem struct {
 }
 
 type CartItem struct {
-	Key       string
-	MenuItem  MenuItem
-	Quantity  int
-	Subtotal  int
+	Key      string
+	MenuItem MenuItem
+	Quantity int
+	Subtotal int
 }
 
 type Invoice struct {
@@ -36,4 +36,9 @@ type InvoiceItem struct {
 	Quantity  int
 	UnitPrice int
 	Subtotal  int
+}
+
+type SalesSummary struct {
+	Count int
+	Total int
 }
