@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"bill-of-fare/internal/assets"
+	"bill-of-fare/internal/build"
 	"bill-of-fare/internal/db"
 	"bill-of-fare/internal/handlers"
 	"bill-of-fare/internal/seed"
@@ -44,6 +45,7 @@ func main() {
 		Cart:     services.NewCartService(),
 		Invoices: services.InvoiceService{DB: database},
 		Settings: services.SettingsService{DB: database},
+		Version:  build.Version,
 		Static:   http.FileServer(http.FS(staticFS)),
 	}
 

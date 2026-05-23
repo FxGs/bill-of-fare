@@ -52,6 +52,9 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
 - It stores the DB in the current Windows user's config directory under `Bill of Fare/bill_of_fare.db`.
 - It seeds the embedded `internal/assets/seed/menu.yaml` on first run.
 - It binds to a free `127.0.0.1` port and opens the default browser automatically.
+- Build-time version lives in `internal/build.Version` and is stamped with `-ldflags "-X bill-of-fare/internal/build.Version=<version>"`.
+- POS/admin headers render that build version.
+- The executable is self-contained for the app code, embedded web assets, schema, starter menu, and SQLite driver. Live data is intentionally stored outside the binary in the user's app-data directory.
 - Build it with:
 
 ```bash
@@ -59,6 +62,7 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
 ```
 
 - Output goes to `dist/windows/BillOfFare.exe`; `dist/` is intentionally gitignored.
+- GitHub Actions releases are tag-driven. Push a tag like `1.2.0` to build a Windows `x64` ZIP and attach it to a GitHub Release.
 
 ## Current Routes
 

@@ -16,6 +16,7 @@ type Handler struct {
 	Cart     *services.CartService
 	Invoices services.InvoiceService
 	Settings services.SettingsService
+	Version  string
 	Static   http.Handler
 }
 
@@ -108,7 +109,7 @@ func (h Handler) admin(w http.ResponseWriter, r *http.Request) {
 	cats, _ := h.Menu.ListCategories()
 	items, _ := h.Menu.ListMenuItems()
 	invoices, _ := h.Invoices.List(100)
-	_ = h.Tpl.ExecuteTemplate(w, "admin", map[string]any{"Categories": cats, "Items": items, "Invoices": invoices, "RestaurantName": h.Settings.RestaurantName()})
+	_ = h.Tpl.ExecuteTemplate(w, "admin", map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "Items": items, "Invoices": invoices, "RestaurantName": h.Settings.RestaurantName()})
 }
 func (h Handler) adminCreateCategory(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
@@ -233,7 +234,14 @@ func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	orderNumber, _ := h.Invoices.NextNumber()
-	return map[string]any{"Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber}
+	return map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber}
+}
+
+func (h Handler) appVersion() string {
+	if h.Version == "" {
+		return "dev"
+	}
+	return h.Version
 }
 
 func groupMenuCategories(cats []models.Category, colorByCategoryID map[int]string) []menuDisplayCategory {
