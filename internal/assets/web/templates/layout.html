@@ -12,13 +12,21 @@
 <body class="pos-screen">
   <header class="pos-topbar">
     <div class="brand-lockup">
-      <div class="brand-mark">B</div>
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 10.5c-1.7-.4-3-1.7-3-3.4C4 5.2 5.6 3.8 7.5 4c.7-1.6 2.2-2.6 4-2.6s3.4 1 4 2.6c1.9-.2 3.5 1.2 3.5 3.1 0 1.7-1.3 3-3 3.4"></path>
+          <path d="M7 10.5h10l-.7 9.5H7.7z"></path>
+          <path d="M8.5 14h7"></path>
+        </svg>
+      </div>
       <div>
         <h1>Bill of Fare</h1>
         <span>POS v1.0</span>
       </div>
     </div>
     <div class="topbar-actions">
+      <time class="topbar-clock" id="topbar-clock" datetime="">--:--</time>
+      <a class="topbar-link" href="/admin">Admin</a>
       <button class="sales-button" onclick="document.getElementById('sales-modal').showModal()" hx-get="/sales" hx-target="#sales-modal-content" hx-swap="innerHTML">Sales</button>
       <div class="service-chip">Dine-in</div>
     </div>
@@ -35,6 +43,18 @@
   <dialog class="sales-modal" id="sales-modal">
     <div id="sales-modal-content"></div>
   </dialog>
+  <script>
+    (() => {
+      const clock = document.getElementById("topbar-clock");
+      const updateClock = () => {
+        const now = new Date();
+        clock.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        clock.setAttribute("datetime", now.toISOString());
+      };
+      updateClock();
+      setInterval(updateClock, 30000);
+    })();
+  </script>
 </body>
 </html>
 {{end}}
@@ -42,30 +62,59 @@
 {{define "menu-pane"}}
 <section class="menu-pane">
   <nav class="category-tabs" aria-label="Menu categories">
-    <button class="category-tab {{if eq .SelectedCategoryID 0}}active{{end}}" hx-get="/menu" hx-target=".menu-pane" hx-swap="outerHTML">All</button>
-    {{range .Categories}}
-    <button class="category-tab {{if eq $.SelectedCategoryID .ID}}active{{end}}" hx-get="/menu?category_id={{.ID}}" hx-target=".menu-pane" hx-swap="outerHTML">{{.Name}}</button>
+    <button class="category-tab category-color-1 {{if eq .SelectedCategoryID 0}}active{{end}}" hx-get="/menu" hx-target=".menu-pane" hx-swap="outerHTML">All</button>
+    {{range .CategoryTabs}}
+    <button class="category-tab {{.ColorClass}} {{if eq $.SelectedCategoryID .ID}}active{{end}}" hx-get="/menu?category_id={{.ID}}" hx-target=".menu-pane" hx-swap="outerHTML">{{.Name}}</button>
     {{end}}
   </nav>
 
   <div id="menu-grid" class="menu-grid">
     {{range .MenuCategories}}
-    <div class="category-break">
+    <div class="category-break category-color {{.ColorClass}}">
       <span>{{.Name}}</span>
     </div>
+    <div class="category-items category-color {{.ColorClass}}">
     {{range .Items}}
     <article class="menu-card">
       <div>
         <p class="menu-card-category">{{.CategoryName}}</p>
         <h2>{{.Name}}</h2>
-        {{if .Variant}}<p class="menu-card-detail">{{.Variant}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}
+        {{if .HasChoices}}<p class="menu-card-detail">{{len .Variants}} variants</p>{{else}}{{range .Variants}}{{if .Variant}}<p class="menu-card-detail">{{.Variant}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}{{end}}{{end}}
       </div>
       <div class="menu-card-footer">
-        <strong>₹{{.Price}}</strong>
+        <strong>{{.PriceLabel}}</strong>
+        {{if .HasChoices}}
+        <button class="add-button" onclick="document.getElementById('variant-modal-{{.ID}}').showModal()" aria-label="Choose {{.Name}} variant">Choose</button>
+        {{else}}
         <button class="add-button" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" aria-label="Add {{.Name}}">Add</button>
+        {{end}}
       </div>
     </article>
+    {{if .HasChoices}}
+    <dialog class="variant-modal" id="variant-modal-{{.ID}}" aria-labelledby="variant-title-{{.ID}}">
+      <section class="variant-card">
+        <div class="variant-header">
+          <div>
+            <p id="variant-title-{{.ID}}">{{.Name}}</p>
+            <span>{{.CategoryName}}</span>
+          </div>
+          <form method="dialog">
+            <button class="modal-close" aria-label="Close">×</button>
+          </form>
+        </div>
+        <div class="variant-list">
+          {{range .Variants}}
+          <button class="variant-choice" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" onclick="this.closest('dialog').close()" aria-label="Add {{.Name}} {{.Variant}}">
+            <span>{{if .Variant}}{{.Variant}}{{else}}Regular{{end}}</span>
+            <strong>₹{{.Price}}</strong>
+          </button>
+          {{end}}
+        </div>
+      </section>
+    </dialog>
     {{end}}
+    {{end}}
+    </div>
     {{end}}
   </div>
 </section>

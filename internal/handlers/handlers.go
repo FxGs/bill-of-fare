@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"bill-of-fare/internal/models"
 	"bill-of-fare/internal/services"
 )
 
@@ -14,6 +15,28 @@ type Handler struct {
 	Cart     *services.CartService
 	Invoices services.InvoiceService
 	Static   http.Handler
+}
+
+type menuDisplayCategory struct {
+	ID         int
+	Name       string
+	ColorClass string
+	Items      []menuDisplayItem
+}
+
+type menuDisplayItem struct {
+	ID           int
+	CategoryName string
+	Name         string
+	Variants     []models.MenuItem
+	PriceLabel   string
+	HasChoices   bool
+}
+
+type menuCategoryTab struct {
+	ID         int
+	Name       string
+	ColorClass string
 }
 
 func (h Handler) Routes() http.Handler {
@@ -26,6 +49,12 @@ func (h Handler) Routes() http.Handler {
 	mux.HandleFunc("/cart/remove", h.remove)
 	mux.HandleFunc("/cart", h.cartFragment)
 	mux.HandleFunc("/sales", h.salesSummary)
+	mux.HandleFunc("/admin", h.admin)
+	mux.HandleFunc("/admin/categories/create", h.adminCreateCategory)
+	mux.HandleFunc("/admin/categories/delete", h.adminDeleteCategory)
+	mux.HandleFunc("/admin/items/create", h.adminCreateItem)
+	mux.HandleFunc("/admin/items/update", h.adminUpdateItem)
+	mux.HandleFunc("/admin/items/delete", h.adminDeleteItem)
 	mux.HandleFunc("/invoice/create", h.createInvoice)
 	mux.HandleFunc("/invoice", h.viewInvoice)
 	return mux
@@ -71,6 +100,53 @@ func (h Handler) salesSummary(w http.ResponseWriter, r *http.Request) {
 	today, _ := h.Invoices.TodaySales()
 	_ = h.Tpl.ExecuteTemplate(w, "sales-summary", map[string]any{"TodaySales": today, "SessionSales": h.Cart.SessionSales(s), "CurrentTotal": currentTotal})
 }
+func (h Handler) admin(w http.ResponseWriter, r *http.Request) {
+	cats, _ := h.Menu.ListCategories()
+	items, _ := h.Menu.ListMenuItems()
+	_ = h.Tpl.ExecuteTemplate(w, "admin", map[string]any{"Categories": cats, "Items": items})
+}
+func (h Handler) adminCreateCategory(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	if err := h.Menu.CreateCategory(r.FormValue("name")); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+func (h Handler) adminDeleteCategory(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	if err := h.Menu.DeleteCategory(atoi(r.FormValue("id"))); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+func (h Handler) adminCreateItem(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	err := h.Menu.CreateMenuItem(atoi(r.FormValue("category_id")), "", r.FormValue("name"), r.FormValue("variant"), atoi(r.FormValue("price")))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+func (h Handler) adminUpdateItem(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	err := h.Menu.UpdateMenuItem(atoi(r.FormValue("id")), atoi(r.FormValue("category_id")), r.FormValue("name"), r.FormValue("variant"), atoi(r.FormValue("price")))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+func (h Handler) adminDeleteItem(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	if err := h.Menu.DeleteMenuItem(atoi(r.FormValue("id"))); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
 func (h Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
@@ -101,6 +177,13 @@ func atoi(s string) int { i, _ := strconv.Atoi(s); return i }
 func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int) map[string]any {
 	cats, _ := h.Menu.ListCategoriesWithItems()
 	menuCats := cats
+	colorByCategoryID := map[int]string{}
+	categoryTabs := make([]menuCategoryTab, 0, len(cats))
+	for i, c := range cats {
+		color := menuColorClass(i + 1)
+		colorByCategoryID[c.ID] = color
+		categoryTabs = append(categoryTabs, menuCategoryTab{ID: c.ID, Name: c.Name, ColorClass: color})
+	}
 	if selectedID > 0 {
 		menuCats = nil
 		for _, c := range cats {
@@ -113,5 +196,55 @@ func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	orderNumber, _ := h.Invoices.NextNumber()
-	return map[string]any{"Categories": cats, "MenuCategories": menuCats, "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber}
+	return map[string]any{"Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber}
+}
+
+func groupMenuCategories(cats []models.Category, colorByCategoryID map[int]string) []menuDisplayCategory {
+	groupedCats := make([]menuDisplayCategory, 0, len(cats))
+	for _, c := range cats {
+		displayCat := menuDisplayCategory{ID: c.ID, Name: c.Name, ColorClass: colorByCategoryID[c.ID]}
+		itemIndex := map[string]int{}
+		for _, item := range c.Items {
+			if _, ok := itemIndex[item.Name]; !ok {
+				itemIndex[item.Name] = len(displayCat.Items)
+				displayCat.Items = append(displayCat.Items, menuDisplayItem{
+					ID:           item.ID,
+					CategoryName: item.CategoryName,
+					Name:         item.Name,
+				})
+			}
+			idx := itemIndex[item.Name]
+			displayCat.Items[idx].Variants = append(displayCat.Items[idx].Variants, item)
+		}
+		for i := range displayCat.Items {
+			displayCat.Items[i].HasChoices = len(displayCat.Items[i].Variants) > 1
+			displayCat.Items[i].PriceLabel = menuPriceLabel(displayCat.Items[i].Variants)
+		}
+		groupedCats = append(groupedCats, displayCat)
+	}
+	return groupedCats
+}
+
+func menuColorClass(index int) string {
+	return "category-color-" + strconv.Itoa((index%6)+1)
+}
+
+func menuPriceLabel(items []models.MenuItem) string {
+	if len(items) == 0 {
+		return "₹0"
+	}
+	min := items[0].Price
+	max := items[0].Price
+	for _, item := range items[1:] {
+		if item.Price < min {
+			min = item.Price
+		}
+		if item.Price > max {
+			max = item.Price
+		}
+	}
+	if min == max {
+		return "₹" + strconv.Itoa(min)
+	}
+	return "₹" + strconv.Itoa(min) + " - ₹" + strconv.Itoa(max)
 }
