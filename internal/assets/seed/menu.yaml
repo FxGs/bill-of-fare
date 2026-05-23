@@ -1,0 +1,466 @@
+---
+categories:
+- name: Sandwich
+  items:
+  - name: Paneer Cheese Grilled Sandwich
+    variants:
+    - name: ''
+      price: 130
+  - name: Corn Cheese Sandwich
+    variants:
+    - name: ''
+      price: 130
+  - name: Chicken Grilled Sandwich
+    variants:
+    - name: ''
+      price: 130
+  - name: Chicken Crispy Grilled Sandwich
+    variants:
+    - name: ''
+      price: 130
+- name: Biryani
+  items:
+  - name: Veg Paneer Biryani
+    variants:
+    - name: ''
+      price: 160
+  - name: Chicken Hyderabadi Dum Biryani
+    variants:
+    - name: ''
+      price: 160
+- name: Roll
+  items:
+  - name: Egg Roll
+    variants:
+    - name: Regular
+      price: 60
+    - name: Cheese
+      price: 80
+  - name: Double Egg Roll
+    variants:
+    - name: Regular
+      price: 70
+    - name: Cheese
+      price: 90
+  - name: Chicken Roll
+    variants:
+    - name: Regular
+      price: 80
+    - name: Cheese
+      price: 100
+  - name: Double Egg Chicken Roll
+    variants:
+    - name: Regular
+      price: 90
+    - name: Cheese
+      price: 110
+  - name: Chicken Crispy Roll
+    variants:
+    - name: Regular
+      price: 120
+    - name: Cheese
+      price: 140
+  - name: Chicken Seek Kabab Roll
+    variants:
+    - name: Regular
+      price: 120
+    - name: Cheese
+      price: 140
+  - name: Chicken Tikka Roll
+    variants:
+    - name: Regular
+      price: 190
+    - name: Cheese
+      price: 210
+  - name: Chicken Malai Tikka Roll
+    variants:
+    - name: Regular
+      price: 190
+    - name: Cheese
+      price: 210
+  - name: Paneer Roll
+    variants:
+    - name: Regular
+      price: 80
+    - name: Cheese
+      price: 100
+  - name: Veg Roll
+    variants:
+    - name: Regular
+      price: 50
+    - name: Cheese
+      price: 70
+  - name: Chicken Chilli Roll
+    variants:
+    - name: Regular
+      price: 110
+    - name: Cheese
+      price: 130
+- name: Momos
+  items:
+  - name: Veg Steam Momos
+    variants:
+    - name: 5pc
+      price: 60
+    - name: 10pc
+      price: 90
+  - name: Chicken Steam Momos
+    variants:
+    - name: 5pc
+      price: 70
+    - name: 10pc
+      price: 110
+  - name: Veg Fried Momos
+    variants:
+    - name: 5pc
+      price: 80
+    - name: 10pc
+      price: 110
+  - name: Chicken Fried Momos
+    variants:
+    - name: 5pc
+      price: 90
+    - name: 10pc
+      price: 110
+  - name: Veg Pan Fried Momos
+    variants:
+    - name: ''
+      price: 130
+  - name: Chicken Pan Fried Momos
+    variants:
+    - name: ''
+      price: 160
+  - name: Chicken Kurkure Momos
+    variants:
+    - name: ''
+      price: 160
+- name: Shawarma
+  items:
+  - name: Chicken Shawarma
+    variants:
+    - name: ''
+      price: 120
+- name: KFC Items
+  items:
+  - name: Chicken Twister
+    variants:
+    - name: ''
+      price: 100
+  - name: Paneer Twister
+    variants:
+    - name: ''
+      price: 100
+  - name: Chicken Zinger Burger
+    variants:
+    - name: Regular
+      price: 100
+    - name: Premium
+      price: 120
+  - name: Paneer Burger
+    variants:
+    - name: Regular
+      price: 100
+    - name: Premium
+      price: 120
+  - name: Chicken Wings
+    variants:
+    - name: ''
+      price: 110
+  - name: Chicken Popcorn
+    variants:
+    - name: ''
+      price: 110
+  - name: Chicken Lolipop
+    variants:
+    - name: ''
+      price: 130
+  - name: French Fries
+    variants:
+    - name: ''
+      price: 90
+- name: Barbeque
+  items:
+  - name: Chicken Tikka Kabab
+    variants:
+    - name: 5pc
+      price: 160
+  - name: Tandoori Tangdi
+    variants:
+    - name: 2pc
+      price: 170
+  - name: Chicken Malai Kabab
+    variants:
+    - name: 5pc
+      price: 190
+  - name: Chicken Tandoori
+    variants:
+    - name: 5pc
+      price: 220
+    - name: 10pc
+      price: 400
+  - name: Chicken Seek Kabab
+    variants:
+    - name: ''
+      price: 160
+  - name: Chicken Platter
+    variants:
+    - name: ''
+      price: 280
+  - name: Paneer Tikka
+    variants:
+    - name: 5pc
+      price: 180
+- name: Chinese
+  items:
+  - name: Chicken Chilli
+    variants:
+    - name: Half
+      price: 120
+    - name: Full
+      price: 180
+  - name: Paneer Chilli
+    variants:
+    - name: Half
+      price: 120
+    - name: Full
+      price: 180
+  - name: Mushroom Chilli
+    variants:
+    - name: Half
+      price: 120
+    - name: Full
+      price: 180
+  - name: Boneless Chilli Chicken
+    variants:
+    - name: ''
+      price: 220
+  - name: Chicken Pakoda
+    variants:
+    - name: 6pc
+      price: 120
+    - name: 12pc
+      price: 180
+  - name: Boneless Pakoda
+    variants:
+    - name: ''
+      price: 220
+  - name: Dragon Chicken
+    variants:
+    - name: ''
+      price: 220
+  - name: Chicken Lolipop
+    variants:
+    - name: ''
+      price: 200
+  - name: Chicken 65
+    variants:
+    - name: ''
+      price: 180
+  - name: Chicken Manchurian
+    variants:
+    - name: ''
+      price: 180
+  - name: Chicken Garlic
+    variants:
+    - name: ''
+      price: 220
+  - name: Veg Chowmin
+    variants:
+    - name: Half
+      price: 60
+    - name: Full
+      price: 100
+  - name: Veg Manchurian
+    variants:
+    - name: Half
+      price: 80
+    - name: Full
+      price: 130
+  - name: Mix Veg Chowmin
+    variants:
+    - name: ''
+      price: 140
+  - name: Egg Chowmin
+    variants:
+    - name: Half
+      price: 70
+    - name: Full
+      price: 110
+  - name: Double Egg Chowmin
+    variants:
+    - name: Half
+      price: 80
+    - name: Full
+      price: 120
+  - name: Chicken Chowmin
+    variants:
+    - name: Half
+      price: 80
+    - name: Full
+      price: 130
+  - name: Veg Hakka Noodles
+    variants:
+    - name: ''
+      price: 130
+  - name: Chicken Hakka Noodles
+    variants:
+    - name: ''
+      price: 150
+  - name: Veg Schezwan Noodles
+    variants:
+    - name: Half
+      price: 80
+    - name: Full
+      price: 120
+  - name: Chicken Schezwan Noodles
+    variants:
+    - name: Half
+      price: 100
+    - name: Full
+      price: 150
+  - name: Veg Fried Rice
+    variants:
+    - name: ''
+      price: 160
+  - name: Chicken Fried Rice
+    variants:
+    - name: ''
+      price: 160
+- name: Mocktail
+  items:
+  - name: Soda Sikanji
+    variants:
+    - name: ''
+      price: 60
+  - name: Blue Lagoon
+    variants:
+    - name: ''
+      price: 80
+  - name: Virgin Mojito
+    variants:
+    - name: ''
+      price: 80
+  - name: Orange Blaster
+    variants:
+    - name: ''
+      price: 80
+  - name: Black Current
+    variants:
+    - name: ''
+      price: 80
+  - name: Cold Coffee
+    variants:
+    - name: ''
+      price: 120
+  - name: Kitkat Shake
+    variants:
+    - name: ''
+      price: 130
+  - name: Oreo Shake
+    variants:
+    - name: ''
+      price: 130
+  - name: Green Apple Thunder
+    variants:
+    - name: ''
+      price: 80
+- name: Main Course Veg
+  items:
+  - name: Mix Veg
+    variants:
+    - name: Half
+      price: 130
+    - name: Full
+      price: 200
+  - name: Veg Navratan
+    variants:
+    - name: Half
+      price: 140
+    - name: Full
+      price: 220
+  - name: Veg Korma
+    variants:
+    - name: ''
+      price: 200
+  - name: Veg Hyderabadi
+    variants:
+    - name: ''
+      price: 200
+  - name: Veg Do Piaza
+    variants:
+    - name: ''
+      price: 200
+- name: Indian Bread
+  items:
+  - name: Tandoori Roti
+    variants:
+    - name: Regular
+      price: 20
+    - name: Butter
+      price: 30
+  - name: Naan
+    variants:
+    - name: Regular
+      price: 40
+    - name: Butter
+      price: 50
+  - name: Laccha Paratha
+    variants:
+    - name: ''
+      price: 35
+- name: Seafood
+  items:
+  - name: Prawn Chilli
+    variants:
+    - name: ''
+      price: 350
+  - name: Barley Prawn
+    variants:
+    - name: ''
+      price: 350
+- name: Pizza
+  items:
+  - name: Indian Veggie Pizza
+    variants:
+    - name: ''
+      price: 140
+  - name: Spicy Indian Pizza
+    variants:
+    - name: ''
+      price: 150
+  - name: Indian Garden Pizza
+    variants:
+    - name: ''
+      price: 170
+  - name: Paneer Tandoori Pizza
+    variants:
+    - name: ''
+      price: 190
+  - name: Corn Cheese Pizza
+    variants:
+    - name: ''
+      price: 210
+  - name: Mushroom Pizza
+    variants:
+    - name: ''
+      price: 210
+  - name: Zum Zum Special Pizza
+    variants:
+    - name: ''
+      price: 180
+  - name: Chicken Lovers Pizza
+    variants:
+    - name: ''
+      price: 130
+  - name: Chicken Chatpata Pizza
+    variants:
+    - name: ''
+      price: 170
+  - name: Chicken I Like You Pizza
+    variants:
+    - name: ''
+      price: 160
+  - name: Zum Zum Special Non Veg Pizza
+    variants:
+    - name: ''
+      price: 190
