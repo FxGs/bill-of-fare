@@ -40,10 +40,11 @@ go run ./cmd/server
 - Useful environment overrides:
 
 ```bash
-DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
+DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml HOST=127.0.0.1 PORT=8080 ./scripts/dev.sh
 ```
 
 - `scripts/dev.sh` seeds the DB if missing, builds a temporary binary, starts it, and restarts when files in `cmd`, `internal`, `web`, `database`, or `seed` change.
+- `cmd/server` defaults to `HOST=127.0.0.1` and `PORT=8080`.
 - Avoid killing the dev server unless the user asks or the port is actually blocked.
 
 ## Windows Packaging
@@ -135,10 +136,12 @@ export GH_CONFIG_DIR="$HOME/.config/gh-fxgs"
 
 ```bash
 go test ./...
+npm run test:ui
 diff -qr web internal/assets/web
 ```
 
 - For frontend/admin changes, verify in the in-app browser at `http://localhost:8080` or `http://localhost:8080/admin`.
+- Browser UI tests live in `tests/ui` and use Playwright. The config starts `cmd/server` against a seeded throwaway SQLite DB on port `8090` by default.
 - When testing admin filters, useful checks:
   - search narrows rows
   - impossible search shows `No matching menu items`

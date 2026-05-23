@@ -23,6 +23,10 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "127.0.0.1"
+	}
 	database, err := db.Open(dbPath)
 	if err != nil {
 		log.Fatal(err)
@@ -31,6 +35,7 @@ func main() {
 	tpl := template.Must(template.ParseFS(assets.FS, "web/templates/*.html"))
 	staticFS, _ := fs.Sub(assets.FS, "web/static")
 	h := handlers.Handler{Tpl: tpl, Menu: services.MenuService{DB: database}, Cart: services.NewCartService(), Invoices: services.InvoiceService{DB: database}, Settings: services.SettingsService{DB: database}, Version: build.Version, Static: http.FileServer(http.FS(staticFS))}
-	log.Println("server listening on :" + port)
-	log.Fatal(http.ListenAndServe(":"+port, h.Routes()))
+	addr := host + ":" + port
+	log.Println("server listening on " + addr)
+	log.Fatal(http.ListenAndServe(addr, h.Routes()))
 }

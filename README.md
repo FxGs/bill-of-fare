@@ -23,7 +23,15 @@ Run with restart-on-change while editing Go, templates, CSS, schema, or seed fil
 Optional environment variables:
 
 ```bash
-DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
+DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml HOST=127.0.0.1 PORT=8080 ./scripts/dev.sh
+```
+
+Run the browser UI tests:
+
+```bash
+npm install
+npx playwright install chromium
+npm run test:ui
 ```
 
 ## Windows Desktop Build
