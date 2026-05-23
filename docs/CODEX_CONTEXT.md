@@ -62,7 +62,7 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
 ```
 
 - Output goes to `dist/windows/BillOfFare.exe`; `dist/` is intentionally gitignored.
-- GitHub Actions releases are tag-driven. Push a tag like `1.2.0` to build a Windows `x64` ZIP and attach it to a GitHub Release.
+- GitHub Actions releases are tag-driven. Push a tag like `1.2.0` or `v1.2.0` to build a Windows `x64` ZIP and attach it to a GitHub Release. The build strips a leading `v` from the version shown in the app header.
 
 ## Current Routes
 
