@@ -31,6 +31,23 @@ type Invoice struct {
 	Total     int
 }
 
+type InvoiceSummary struct {
+	ID        int
+	CreatedAt time.Time
+	ItemCount int
+	Total     int
+}
+
+type InvoiceExportRow struct {
+	InvoiceID    int
+	CreatedAt    time.Time
+	ItemName     string
+	Quantity     int
+	UnitPrice    int
+	Subtotal     int
+	InvoiceTotal int
+}
+
 type InvoiceItem struct {
 	ItemName  string
 	Quantity  int

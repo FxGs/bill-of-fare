@@ -11,7 +11,7 @@
 <body>
   <div class="receipt-58mm">
     <div class="text-center mb-2">
-      <h6 class="m-0">Bill of Fare</h6>
+      <h6 class="m-0">{{.RestaurantName}}</h6>
       <small>Invoice #{{.Invoice.ID}}</small>
     </div>
 
@@ -52,6 +52,13 @@
       <a href="/" class="btn btn-secondary btn-sm">Back</a>
     </div>
   </div>
+  {{if .AutoPrint}}
+  <script>
+    window.addEventListener("load", () => {
+      window.print();
+    });
+  </script>
+  {{end}}
 </body>
 </html>
 {{end}}

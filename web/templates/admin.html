@@ -39,6 +39,8 @@
         <div class="admin-action-buttons">
           <button class="admin-primary-button" type="button" data-open-modal="admin-manage-categories-modal">Manage Categories</button>
           <button class="admin-secondary-button" type="button" data-open-modal="admin-item-modal">Add Item</button>
+          <button class="admin-secondary-button" type="button" data-open-modal="admin-invoices-modal">Past Invoices</button>
+          <button class="admin-secondary-button" type="button" data-open-modal="admin-settings-modal">Settings</button>
         </div>
       </div>
     </section>
@@ -222,6 +224,66 @@
         <input type="hidden" name="id" id="admin-delete-category-id">
         <button class="admin-secondary-button" type="button" data-close-modal="admin-delete-category-modal">Cancel</button>
         <button class="admin-danger-button">Delete Category</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="admin-modal admin-invoices-modal" id="admin-invoices-modal" aria-labelledby="admin-invoices-title">
+    <div class="admin-modal-shell">
+      <div class="admin-modal-header">
+        <div>
+          <p id="admin-invoices-title">Past Invoices</p>
+          <span>{{len .Invoices}} recent invoices</span>
+        </div>
+        <div class="admin-modal-actions">
+          <a class="admin-secondary-button" href="/admin/invoices/export">Export CSV</a>
+          <form method="dialog">
+            <button class="modal-close" aria-label="Close">&times;</button>
+          </form>
+        </div>
+      </div>
+      <div class="admin-invoice-list">
+        {{if .Invoices}}
+        <div class="admin-invoice-head">
+          <span>Invoice</span>
+          <span>Date</span>
+          <span>Items</span>
+          <span>Total</span>
+          <span>View</span>
+        </div>
+        {{range .Invoices}}
+        <div class="admin-invoice-row">
+          <span>#{{.ID}}</span>
+          <span>{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
+          <span>{{.ItemCount}}</span>
+          <strong>₹{{.Total}}</strong>
+          <a href="/invoice?id={{.ID}}" target="_blank" rel="noopener">View</a>
+        </div>
+        {{end}}
+        {{else}}
+        <div class="admin-empty-row">No invoices yet</div>
+        {{end}}
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="admin-modal admin-modal-narrow" id="admin-settings-modal" aria-labelledby="admin-settings-title">
+    <div class="admin-modal-shell">
+      <div class="admin-modal-header">
+        <div>
+          <p id="admin-settings-title">Receipt Settings</p>
+          <span>Shown at the top of every invoice.</span>
+        </div>
+        <form method="dialog">
+          <button class="modal-close" aria-label="Close">&times;</button>
+        </form>
+      </div>
+      <form class="admin-modal-form" action="/admin/settings/restaurant-name" method="post">
+        <label>
+          Restaurant Name
+          <input name="restaurant_name" value="{{.RestaurantName}}" required>
+        </label>
+        <button class="admin-primary-button">Save Name</button>
       </form>
     </div>
   </dialog>

@@ -46,12 +46,28 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
 - `scripts/dev.sh` seeds the DB if missing, builds a temporary binary, starts it, and restarts when files in `cmd`, `internal`, `web`, `database`, or `seed` change.
 - Avoid killing the dev server unless the user asks or the port is actually blocked.
 
+## Windows Packaging
+
+- `cmd/desktop` is the Windows-friendly one-click entrypoint.
+- It stores the DB in the current Windows user's config directory under `Bill of Fare/bill_of_fare.db`.
+- It seeds the embedded `internal/assets/seed/menu.yaml` on first run.
+- It binds to a free `127.0.0.1` port and opens the default browser automatically.
+- Build it with:
+
+```bash
+./scripts/package-windows.sh
+```
+
+- Output goes to `dist/windows/BillOfFare.exe`; `dist/` is intentionally gitignored.
+
 ## Current Routes
 
 - `GET /` renders the POS.
 - `GET /menu?category_id=N` renders the menu fragment. `category_id=0` or empty shows all categories.
 - `POST /cart/add`, `/cart/qty`, `/cart/remove`, and `GET /cart` update/render the cart fragment.
 - `GET /sales` renders the sales summary modal.
+- `GET /admin/invoices/export` exports invoice line items as CSV.
+- `POST /admin/settings/restaurant-name` updates the restaurant name printed on invoices.
 - `POST /invoice/create` creates an invoice, records session sales, clears the cart, and redirects to `/invoice?id=N`.
 - `GET /invoice?id=N` renders a printable invoice.
 - `GET /admin` renders menu admin.
@@ -80,6 +96,8 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
 - Save uses a floppy disk icon; delete uses a trash icon.
 - Price inputs hide browser number spinners.
 - The menu item table has client-side search and category filtering, plus a live visible-row count and empty state.
+- Past invoices are available from the admin action strip, with printable invoice links and CSV export.
+- Receipt settings are available from the admin action strip; `restaurant_name` is stored in `app_settings`.
 - Mobile admin is acceptable but not the primary polish target right now.
 
 ## Data Model Notes
@@ -87,6 +105,7 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
 - `categories.name` is unique.
 - `menu_items` has a uniqueness constraint on `(category_id, name, variant)`.
 - `invoices.created_at` defaults to SQLite `CURRENT_TIMESTAMP`.
+- `app_settings` stores simple app configuration, including `restaurant_name`.
 - `TodaySales()` uses SQLite local-date comparison:
 
 ```sql

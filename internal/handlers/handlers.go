@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/csv"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -14,6 +15,7 @@ type Handler struct {
 	Menu     services.MenuService
 	Cart     *services.CartService
 	Invoices services.InvoiceService
+	Settings services.SettingsService
 	Static   http.Handler
 }
 
@@ -55,6 +57,8 @@ func (h Handler) Routes() http.Handler {
 	mux.HandleFunc("/admin/items/create", h.adminCreateItem)
 	mux.HandleFunc("/admin/items/update", h.adminUpdateItem)
 	mux.HandleFunc("/admin/items/delete", h.adminDeleteItem)
+	mux.HandleFunc("/admin/invoices/export", h.adminExportInvoices)
+	mux.HandleFunc("/admin/settings/restaurant-name", h.adminUpdateRestaurantName)
 	mux.HandleFunc("/invoice/create", h.createInvoice)
 	mux.HandleFunc("/invoice", h.viewInvoice)
 	return mux
@@ -103,7 +107,8 @@ func (h Handler) salesSummary(w http.ResponseWriter, r *http.Request) {
 func (h Handler) admin(w http.ResponseWriter, r *http.Request) {
 	cats, _ := h.Menu.ListCategories()
 	items, _ := h.Menu.ListMenuItems()
-	_ = h.Tpl.ExecuteTemplate(w, "admin", map[string]any{"Categories": cats, "Items": items})
+	invoices, _ := h.Invoices.List(100)
+	_ = h.Tpl.ExecuteTemplate(w, "admin", map[string]any{"Categories": cats, "Items": items, "Invoices": invoices, "RestaurantName": h.Settings.RestaurantName()})
 }
 func (h Handler) adminCreateCategory(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
@@ -147,6 +152,38 @@ func (h Handler) adminDeleteItem(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
+func (h Handler) adminExportInvoices(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.Invoices.ExportRows()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", `attachment; filename="bill-of-fare-invoices.csv"`)
+
+	cw := csv.NewWriter(w)
+	_ = cw.Write([]string{"invoice_id", "created_at", "item_name", "quantity", "unit_price", "subtotal", "invoice_total"})
+	for _, row := range rows {
+		_ = cw.Write([]string{
+			strconv.Itoa(row.InvoiceID),
+			row.CreatedAt.Format("2006-01-02 15:04:05"),
+			row.ItemName,
+			strconv.Itoa(row.Quantity),
+			strconv.Itoa(row.UnitPrice),
+			strconv.Itoa(row.Subtotal),
+			strconv.Itoa(row.InvoiceTotal),
+		})
+	}
+	cw.Flush()
+}
+func (h Handler) adminUpdateRestaurantName(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	if err := h.Settings.UpdateRestaurantName(r.FormValue("restaurant_name")); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
 func (h Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
@@ -161,7 +198,7 @@ func (h Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	h.Cart.RecordSale(s, total)
 	h.Cart.Clear(s)
-	http.Redirect(w, r, "/invoice?id="+strconv.Itoa(id), http.StatusSeeOther)
+	http.Redirect(w, r, "/invoice?id="+strconv.Itoa(id)+"&print=1", http.StatusSeeOther)
 }
 func (h Handler) viewInvoice(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Query().Get("id"))
@@ -170,7 +207,7 @@ func (h Handler) viewInvoice(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invoice not found", 404)
 		return
 	}
-	_ = h.Tpl.ExecuteTemplate(w, "invoice", map[string]any{"Invoice": inv})
+	_ = h.Tpl.ExecuteTemplate(w, "invoice", map[string]any{"Invoice": inv, "RestaurantName": h.Settings.RestaurantName(), "AutoPrint": r.URL.Query().Get("print") == "1"})
 }
 func atoi(s string) int { i, _ := strconv.Atoi(s); return i }
 

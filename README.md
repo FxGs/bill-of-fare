@@ -26,6 +26,16 @@ Optional environment variables:
 DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml PORT=8080 ./scripts/dev.sh
 ```
 
+## Windows Desktop Build
+
+Build a one-click Windows executable:
+
+```bash
+./scripts/package-windows.sh
+```
+
+The output is `dist/windows/BillOfFare.exe`. On Windows, double-clicking it starts the local POS and opens it in the default browser. The app stores its database in `%AppData%\Bill of Fare\bill_of_fare.db` and seeds the menu automatically on first run.
+
 ## Features
 - Menu display by category
 - Session cart (in-memory by session cookie)

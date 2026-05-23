@@ -29,7 +29,7 @@ func main() {
 	defer database.Close()
 	tpl := template.Must(template.ParseFS(assets.FS, "web/templates/*.html"))
 	staticFS, _ := fs.Sub(assets.FS, "web/static")
-	h := handlers.Handler{Tpl: tpl, Menu: services.MenuService{DB: database}, Cart: services.NewCartService(), Invoices: services.InvoiceService{DB: database}, Static: http.FileServer(http.FS(staticFS))}
+	h := handlers.Handler{Tpl: tpl, Menu: services.MenuService{DB: database}, Cart: services.NewCartService(), Invoices: services.InvoiceService{DB: database}, Settings: services.SettingsService{DB: database}, Static: http.FileServer(http.FS(staticFS))}
 	log.Println("server listening on :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, h.Routes()))
 }
