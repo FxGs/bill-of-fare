@@ -56,8 +56,16 @@ body.pos-screen {
   border-radius: 6px;
   background: #241d12;
   color: var(--accent-2);
-  font-size: 16px;
-  font-weight: 700;
+}
+
+.brand-mark svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .brand-lockup h1 {
@@ -69,7 +77,9 @@ body.pos-screen {
 
 .brand-lockup span,
 .service-chip,
-.sales-button {
+.topbar-clock,
+.sales-button,
+.topbar-link {
   color: var(--muted);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 12px;
@@ -88,6 +98,31 @@ body.pos-screen {
   background: #1f1a12;
 }
 
+.topbar-clock {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #1f1a12;
+  color: var(--text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.topbar-clock::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin-right: 7px;
+  border: 1.8px solid var(--accent-2);
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--accent-2), var(--accent-2)) 50% 2px / 1.5px 5px no-repeat,
+    linear-gradient(var(--accent-2), var(--accent-2)) 50% 50% / 4px 1.5px no-repeat;
+}
+
 .sales-button {
   min-height: 34px;
   padding: 0 13px;
@@ -98,8 +133,23 @@ body.pos-screen {
   font-weight: 700;
 }
 
+.topbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid #4b3922;
+  border-radius: 999px;
+  background: #241d12;
+  color: var(--accent-2);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .sales-button:hover,
-.sales-button:focus {
+.sales-button:focus,
+.topbar-link:hover,
+.topbar-link:focus {
   background: var(--accent);
   color: #1b1309;
 }
@@ -132,25 +182,110 @@ body.pos-screen {
   display: none;
 }
 
+.category-tab,
+.category-color {
+  --tab-color: var(--accent);
+  --tab-text: #1b1309;
+}
+
 .category-tab {
   flex: 0 0 auto;
   min-height: 32px;
   padding: 7px 14px;
-  border: 0;
+  border: 1px solid color-mix(in srgb, var(--tab-color) 45%, #17140f);
   border-radius: 5px;
-  background: transparent;
-  color: var(--muted);
+  background: color-mix(in srgb, var(--tab-color) 12%, transparent);
+  color: color-mix(in srgb, var(--tab-color) 82%, #f5ead7);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 12px;
+  font-weight: 800;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.category-tab:nth-child(6n + 1),
+.category-color:nth-of-type(12n + 11),
+.category-color:nth-of-type(12n) {
+  --tab-color: #d5963c;
+  --tab-text: #211306;
+}
+
+.category-tab:nth-child(6n + 2),
+.category-color:nth-of-type(12n + 1),
+.category-color:nth-of-type(12n + 2) {
+  --tab-color: #63c079;
+  --tab-text: #081a0c;
+}
+
+.category-tab:nth-child(6n + 3),
+.category-color:nth-of-type(12n + 3),
+.category-color:nth-of-type(12n + 4) {
+  --tab-color: #d35d77;
+  --tab-text: #220910;
+}
+
+.category-tab:nth-child(6n + 4),
+.category-color:nth-of-type(12n + 5),
+.category-color:nth-of-type(12n + 6) {
+  --tab-color: #6fb7d8;
+  --tab-text: #071821;
+}
+
+.category-tab:nth-child(6n + 5),
+.category-color:nth-of-type(12n + 7),
+.category-color:nth-of-type(12n + 8) {
+  --tab-color: #c998ef;
+  --tab-text: #1b0d25;
+}
+
+.category-tab:nth-child(6n),
+.category-color:nth-of-type(12n + 9),
+.category-color:nth-of-type(12n + 10) {
+  --tab-color: #e0c45a;
+  --tab-text: #1b1604;
+}
+
+.category-color.category-color-1,
+.category-tab.category-color-1 {
+  --tab-color: #d5963c;
+  --tab-text: #211306;
+}
+
+.category-color.category-color-2,
+.category-tab.category-color-2 {
+  --tab-color: #63c079;
+  --tab-text: #081a0c;
+}
+
+.category-color.category-color-3,
+.category-tab.category-color-3 {
+  --tab-color: #d35d77;
+  --tab-text: #220910;
+}
+
+.category-color.category-color-4,
+.category-tab.category-color-4 {
+  --tab-color: #6fb7d8;
+  --tab-text: #071821;
+}
+
+.category-color.category-color-5,
+.category-tab.category-color-5 {
+  --tab-color: #c998ef;
+  --tab-text: #1b0d25;
+}
+
+.category-color.category-color-6,
+.category-tab.category-color-6 {
+  --tab-color: #e0c45a;
+  --tab-text: #1b1604;
 }
 
 .category-tab:hover,
 .category-tab:focus,
 .category-tab.active {
-  background: var(--accent);
-  color: #1b1309;
+  background: var(--tab-color);
+  color: var(--tab-text);
 }
 
 .menu-grid {
@@ -167,12 +302,19 @@ body.pos-screen {
 }
 
 .category-break span {
-  color: var(--accent-2);
+  color: var(--tab-color);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.category-items {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .menu-card {
@@ -195,7 +337,7 @@ body.pos-screen {
 
 .menu-card-category {
   margin: 0 0 8px;
-  color: var(--green);
+  color: var(--tab-color);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 11px;
   font-weight: 800;
@@ -260,6 +402,89 @@ body.pos-screen {
 .add-button:hover,
 .add-button:focus {
   background: var(--accent);
+  color: #1b1309;
+}
+
+.variant-modal {
+  width: min(420px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #19160f;
+  color: var(--text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+
+.variant-modal::backdrop {
+  background: rgba(7, 6, 4, 0.72);
+}
+
+.variant-card {
+  display: grid;
+}
+
+.variant-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.variant-header p {
+  margin: 0;
+  color: #fff6e4;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.variant-header span {
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+.variant-header form {
+  margin: 0;
+}
+
+.variant-list {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.variant-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #211d15;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.variant-choice strong {
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.variant-choice:hover,
+.variant-choice:focus {
+  border-color: #5c472b;
+  background: var(--accent);
+  color: #1b1309;
+}
+
+.variant-choice:hover strong,
+.variant-choice:focus strong {
   color: #1b1309;
 }
 
@@ -562,6 +787,462 @@ body.pos-screen {
   font-size: 24px;
 }
 
+.admin-shell {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.admin-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #19160f;
+}
+
+.admin-panel + .admin-panel {
+  margin-top: 16px;
+}
+
+.admin-action-panel {
+  margin-bottom: 16px;
+}
+
+.admin-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-section-header p {
+  margin: 0;
+  color: #fff6e4;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.admin-section-header span,
+.admin-modal-form label {
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+.admin-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(180px, 280px) minmax(160px, 220px);
+  gap: 10px;
+  align-items: end;
+  min-width: min(520px, 100%);
+}
+
+.admin-filter-bar label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+.admin-filter-bar input,
+.admin-filter-bar select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #211d15;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  padding: 0 10px;
+}
+
+.admin-filter-bar input[type="search"] {
+  appearance: none;
+}
+
+.admin-filter-bar input::placeholder {
+  color: #776f60;
+}
+
+.admin-category-list {
+  display: grid;
+  gap: 8px;
+  max-height: min(460px, calc(100vh - 210px));
+  overflow-y: scroll;
+  scrollbar-color: var(--accent) #211d15;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  padding: 0 14px 14px;
+}
+
+.admin-category-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.admin-category-list::-webkit-scrollbar-track {
+  background: #211d15;
+  border-radius: 999px;
+}
+
+.admin-category-list::-webkit-scrollbar-thumb {
+  border: 2px solid #211d15;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.admin-category-create-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-category-create-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+.admin-category-create-form input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #211d15;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  padding: 0 10px;
+}
+
+.admin-category-create-form input::placeholder {
+  color: #776f60;
+}
+
+.admin-category-count {
+  padding: 10px 14px 8px;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-category-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+  padding: 5px 6px 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #19160f;
+}
+
+.admin-category-row span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-category-row button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 28px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--rose);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.admin-category-row button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.admin-category-row button:hover,
+.admin-category-row button:focus {
+  background: #33201d;
+}
+
+.admin-modal-form input,
+.admin-modal-form select,
+.admin-row-form input,
+.admin-row-form select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #211d15;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+}
+
+.admin-modal-form input,
+.admin-modal-form select {
+  padding: 0 10px;
+}
+
+.admin-row-form input,
+.admin-row-form select {
+  padding: 0 8px;
+}
+
+.admin-primary-button,
+.admin-secondary-button,
+.admin-danger-button,
+.admin-save-button,
+.admin-delete-button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-primary-button {
+  align-self: end;
+  background: var(--accent);
+  color: #1b1309;
+}
+
+.admin-secondary-button {
+  display: inline-grid;
+  align-items: center;
+  justify-content: center;
+  min-width: 142px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  background: #211d15;
+  color: var(--accent-2);
+  text-decoration: none;
+}
+
+.admin-secondary-button:hover,
+.admin-secondary-button:focus {
+  background: #2b2418;
+}
+
+.admin-danger-button {
+  padding: 0 14px;
+  background: var(--rose);
+  color: #211015;
+}
+
+.admin-danger-button:hover,
+.admin-danger-button:focus {
+  background: #ff86a5;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 900px;
+}
+
+.admin-table-head,
+.admin-table-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.8fr 1fr 140px 42px 42px;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-table-head {
+  padding: 12px 18px;
+}
+
+.admin-table-head span {
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.admin-actions-head {
+  grid-column: 5 / span 2;
+  text-align: center;
+}
+
+.admin-table-row {
+  padding: 10px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-table-row[hidden] {
+  display: none;
+}
+
+.admin-row-form {
+  display: contents;
+}
+
+.admin-row-form input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.admin-modal-form input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.admin-row-form input[type="number"]::-webkit-outer-spin-button,
+.admin-row-form input[type="number"]::-webkit-inner-spin-button,
+.admin-modal-form input[type="number"]::-webkit-outer-spin-button,
+.admin-modal-form input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.admin-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 38px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.admin-icon-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.admin-save-button {
+  background: #3d3321;
+  color: var(--accent-2);
+}
+
+.admin-save-button:hover,
+.admin-save-button:focus {
+  background: var(--accent);
+  color: #1b1309;
+}
+
+.admin-delete-button {
+  background: transparent;
+  color: var(--rose);
+}
+
+.admin-delete-button:hover,
+.admin-delete-button:focus {
+  background: #33201d;
+}
+
+.admin-empty-row {
+  padding: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+}
+
+.admin-modal {
+  width: min(620px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #19160f;
+  color: var(--text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+
+.admin-modal-narrow,
+.admin-confirm-modal {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.admin-modal::backdrop {
+  background: rgba(7, 6, 4, 0.72);
+}
+
+.admin-modal-shell {
+  display: grid;
+}
+
+.admin-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-modal-header p {
+  margin: 0;
+  color: #fff6e4;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.admin-modal-header span {
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+.admin-modal-header form {
+  margin: 0;
+}
+
+.admin-modal-form {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 18px;
+}
+
+.admin-modal-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-confirm-actions {
+  grid-template-columns: 1fr 1fr;
+}
+
 body:not(.pos-screen) {
   background: #ffffff;
 }
@@ -603,6 +1284,10 @@ body:not(.pos-screen) {
   .menu-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .category-items {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 860px) {
@@ -624,8 +1309,22 @@ body:not(.pos-screen) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .category-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .empty-order {
     min-height: 220px;
+  }
+
+  .admin-section-header {
+    display: grid;
+  }
+
+  .admin-filter-bar {
+    grid-template-columns: 1fr;
+    min-width: 0;
+    width: 100%;
   }
 }
 
@@ -647,6 +1346,11 @@ body:not(.pos-screen) {
     padding: 0 11px;
   }
 
+  .topbar-link {
+    min-height: 32px;
+    padding: 0 11px;
+  }
+
   .category-tabs {
     padding: 10px 12px;
   }
@@ -656,12 +1360,33 @@ body:not(.pos-screen) {
     padding: 12px;
   }
 
+  .category-items {
+    grid-template-columns: 1fr;
+  }
+
   .sales-grid {
     grid-template-columns: 1fr;
   }
 
   .sales-metric-wide {
     grid-column: auto;
+  }
+
+  .admin-action-buttons {
+    justify-content: flex-start;
+  }
+
+  .admin-category-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-table {
+    min-width: 760px;
+  }
+
+  .admin-table-head,
+  .admin-table-row {
+    grid-template-columns: 1.2fr 1.6fr 1fr 110px 42px 42px;
   }
 }
 

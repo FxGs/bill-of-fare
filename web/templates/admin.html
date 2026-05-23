@@ -1,0 +1,323 @@
+{{define "admin"}}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Bill of Fare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/css/app.css" rel="stylesheet">
+</head>
+<body class="pos-screen">
+  <header class="pos-topbar">
+    <div class="brand-lockup">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 10.5c-1.7-.4-3-1.7-3-3.4C4 5.2 5.6 3.8 7.5 4c.7-1.6 2.2-2.6 4-2.6s3.4 1 4 2.6c1.9-.2 3.5 1.2 3.5 3.1 0 1.7-1.3 3-3 3.4"></path>
+          <path d="M7 10.5h10l-.7 9.5H7.7z"></path>
+          <path d="M8.5 14h7"></path>
+        </svg>
+      </div>
+      <div>
+        <h1>Menu Admin</h1>
+        <span>Bill of Fare</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <time class="topbar-clock" id="topbar-clock" datetime="">--:--</time>
+      <a class="topbar-link" href="/">Home / POS</a>
+    </div>
+  </header>
+
+  <main class="admin-shell">
+    <section class="admin-panel admin-action-panel">
+      <div class="admin-section-header">
+        <div>
+          <p>Menu Admin</p>
+          <span>Manage categories, add dishes, and keep prices current.</span>
+        </div>
+        <div class="admin-action-buttons">
+          <button class="admin-primary-button" type="button" data-open-modal="admin-manage-categories-modal">Manage Categories</button>
+          <button class="admin-secondary-button" type="button" data-open-modal="admin-item-modal">Add Item</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-panel">
+      <div class="admin-section-header">
+        <div>
+          <p>Menu Items</p>
+          <span><span id="admin-visible-count">{{len .Items}}</span> of {{len .Items}} editable rows</span>
+        </div>
+        <div class="admin-filter-bar" aria-label="Menu item filters">
+          <label>
+            Search
+            <input id="admin-item-search" type="search" placeholder="Dish or variant">
+          </label>
+          <label>
+            Category
+            <select id="admin-category-filter">
+              <option value="">All categories</option>
+              {{range .Categories}}
+              <option value="{{.ID}}">{{.Name}}</option>
+              {{end}}
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <div class="admin-table">
+          <div class="admin-table-head">
+            <span>Category</span>
+            <span>Item</span>
+            <span>Variant</span>
+            <span>Price</span>
+            <span class="admin-actions-head">Actions</span>
+          </div>
+          {{range .Items}}
+          {{$item := .}}
+          <div class="admin-table-row" data-admin-menu-row data-category-id="{{.CategoryID}}">
+            <form class="admin-row-form" action="/admin/items/update" method="post">
+              <input type="hidden" name="id" value="{{.ID}}">
+              <select name="category_id" aria-label="Category">
+                {{range $.Categories}}
+                <option value="{{.ID}}" {{if eq .ID $item.CategoryID}}selected{{end}}>{{.Name}}</option>
+                {{end}}
+              </select>
+              <input name="name" value="{{.Name}}" aria-label="Item name" required>
+              <input name="variant" value="{{.Variant}}" aria-label="Variant">
+              <input name="price" value="{{.Price}}" type="number" inputmode="numeric" min="0" step="1" aria-label="Price" required>
+              <button class="admin-icon-button admin-save-button" aria-label="Save {{.Name}}" title="Save">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 3h12l2 2v16H5z"></path>
+                  <path d="M8 3v6h8V3"></path>
+                  <path d="M8 15h8v6H8z"></path>
+                </svg>
+              </button>
+            </form>
+            <button class="admin-icon-button admin-delete-button" type="button" aria-label="Delete {{.Name}}" title="Delete" data-delete-item-id="{{.ID}}" data-delete-item-name="{{.Name}}{{if .Variant}} ({{.Variant}}){{end}}">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M6 7l1 14h10l1-14"></path>
+                <path d="M9 7V4h6v3"></path>
+              </svg>
+            </button>
+          </div>
+          {{end}}
+          <div class="admin-empty-row" id="admin-empty-row" hidden>No matching menu items</div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <dialog class="admin-modal" id="admin-item-modal" aria-labelledby="admin-item-modal-title">
+    <div class="admin-modal-shell">
+      <div class="admin-modal-header">
+        <div>
+          <p id="admin-item-modal-title">Add Item</p>
+          <span>Add a dish or variant to an existing category.</span>
+        </div>
+        <form method="dialog">
+          <button class="modal-close" aria-label="Close">&times;</button>
+        </form>
+      </div>
+      <form class="admin-modal-form" action="/admin/items/create" method="post">
+        <label>
+          Category
+          <select name="category_id" required>
+            <option value="">Select category</option>
+            {{range .Categories}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+          </select>
+        </label>
+        <label>
+          Item
+          <input name="name" required>
+        </label>
+        <label>
+          Variant
+          <input name="variant" placeholder="Optional">
+        </label>
+        <label>
+          Price
+          <input name="price" type="number" min="0" step="1" required>
+        </label>
+        <button class="admin-primary-button">Add Item</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="admin-modal" id="admin-manage-categories-modal" aria-labelledby="admin-manage-categories-modal-title">
+    <div class="admin-modal-shell">
+      <div class="admin-modal-header">
+        <div>
+          <p id="admin-manage-categories-modal-title">Manage Categories</p>
+          <span>Add a category or remove unused groups.</span>
+        </div>
+        <form method="dialog">
+          <button class="modal-close" aria-label="Close">&times;</button>
+        </form>
+      </div>
+      <form class="admin-category-create-form" action="/admin/categories/create" method="post">
+        <label>
+          New Category
+          <input name="name" placeholder="Category name" required>
+        </label>
+        <button class="admin-primary-button">Add</button>
+      </form>
+      <div class="admin-category-count">{{len .Categories}} categories</div>
+      <div class="admin-category-list">
+        {{range .Categories}}
+        <div class="admin-category-row">
+          <span>{{.Name}}</span>
+          <button aria-label="Delete {{.Name}}" title="Delete" data-delete-category-id="{{.ID}}" data-delete-category-name="{{.Name}}">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16"></path>
+              <path d="M10 11v6"></path>
+              <path d="M14 11v6"></path>
+              <path d="M6 7l1 14h10l1-14"></path>
+              <path d="M9 7V4h6v3"></path>
+            </svg>
+          </button>
+        </div>
+        {{end}}
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="admin-modal admin-confirm-modal" id="admin-delete-item-modal" aria-labelledby="admin-delete-item-title">
+    <div class="admin-modal-shell">
+      <div class="admin-modal-header">
+        <div>
+          <p id="admin-delete-item-title">Delete Item</p>
+          <span id="admin-delete-item-name">This item will be removed from the menu.</span>
+        </div>
+        <form method="dialog">
+          <button class="modal-close" aria-label="Close">&times;</button>
+        </form>
+      </div>
+      <form class="admin-modal-form admin-confirm-actions" action="/admin/items/delete" method="post">
+        <input type="hidden" name="id" id="admin-delete-item-id">
+        <button class="admin-secondary-button" type="button" data-close-modal="admin-delete-item-modal">Cancel</button>
+        <button class="admin-danger-button">Delete Item</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="admin-modal admin-confirm-modal" id="admin-delete-category-modal" aria-labelledby="admin-delete-category-title">
+    <div class="admin-modal-shell">
+      <div class="admin-modal-header">
+        <div>
+          <p id="admin-delete-category-title">Delete Category</p>
+          <span id="admin-delete-category-name">Empty this category before deleting it.</span>
+        </div>
+        <form method="dialog">
+          <button class="modal-close" aria-label="Close">&times;</button>
+        </form>
+      </div>
+      <form class="admin-modal-form admin-confirm-actions" action="/admin/categories/delete" method="post">
+        <input type="hidden" name="id" id="admin-delete-category-id">
+        <button class="admin-secondary-button" type="button" data-close-modal="admin-delete-category-modal">Cancel</button>
+        <button class="admin-danger-button">Delete Category</button>
+      </form>
+    </div>
+  </dialog>
+  <script>
+    (() => {
+      const searchInput = document.getElementById("admin-item-search");
+      const categoryFilter = document.getElementById("admin-category-filter");
+      const visibleCount = document.getElementById("admin-visible-count");
+      const emptyRow = document.getElementById("admin-empty-row");
+      const rows = Array.from(document.querySelectorAll("[data-admin-menu-row]"));
+
+      const rowText = (row) => {
+        const fields = row.querySelectorAll("input[name='name'], input[name='variant'], input[name='price']");
+        const category = row.querySelector("select[name='category_id'] option:checked")?.textContent || "";
+        return [category, ...Array.from(fields, (field) => field.value)].join(" ").toLowerCase();
+      };
+
+      const applyFilters = () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const categoryID = categoryFilter.value;
+        let shown = 0;
+
+        rows.forEach((row) => {
+          const rowCategoryID = row.querySelector("select[name='category_id']")?.value || row.dataset.categoryId;
+          const categoryMatch = !categoryID || rowCategoryID === categoryID;
+          const searchMatch = !query || rowText(row).includes(query);
+          const isVisible = categoryMatch && searchMatch;
+          row.hidden = !isVisible;
+          shown += isVisible ? 1 : 0;
+        });
+
+        visibleCount.textContent = shown;
+        emptyRow.hidden = shown > 0;
+      };
+
+      searchInput.addEventListener("input", applyFilters);
+      categoryFilter.addEventListener("change", applyFilters);
+      rows.forEach((row) => row.addEventListener("input", applyFilters));
+      rows.forEach((row) => row.addEventListener("change", applyFilters));
+    })();
+
+    (() => {
+      const openModal = (id) => {
+        document.getElementById(id).showModal();
+      };
+
+      document.querySelectorAll("[data-open-modal]").forEach((button) => {
+        button.addEventListener("click", () => openModal(button.dataset.openModal));
+      });
+
+      document.querySelectorAll("[data-close-modal]").forEach((button) => {
+        button.addEventListener("click", () => document.getElementById(button.dataset.closeModal).close());
+      });
+
+      document.querySelectorAll("dialog").forEach((modal) => {
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) {
+            modal.close();
+          }
+        });
+      });
+
+      const itemDeleteModal = document.getElementById("admin-delete-item-modal");
+      const itemDeleteID = document.getElementById("admin-delete-item-id");
+      const itemDeleteName = document.getElementById("admin-delete-item-name");
+      document.querySelectorAll("[data-delete-item-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          itemDeleteID.value = button.dataset.deleteItemId;
+          itemDeleteName.textContent = button.dataset.deleteItemName;
+          itemDeleteModal.showModal();
+        });
+      });
+
+      const categoryDeleteModal = document.getElementById("admin-delete-category-modal");
+      const categoryDeleteID = document.getElementById("admin-delete-category-id");
+      const categoryDeleteName = document.getElementById("admin-delete-category-name");
+      document.querySelectorAll("[data-delete-category-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          categoryDeleteID.value = button.dataset.deleteCategoryId;
+          categoryDeleteName.textContent = button.dataset.deleteCategoryName;
+          categoryDeleteModal.showModal();
+        });
+      });
+    })();
+
+    (() => {
+      const clock = document.getElementById("topbar-clock");
+      const updateClock = () => {
+        const now = new Date();
+        clock.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        clock.setAttribute("datetime", now.toISOString());
+      };
+      updateClock();
+      setInterval(updateClock, 30000);
+    })();
+  </script>
+</body>
+</html>
+{{end}}
