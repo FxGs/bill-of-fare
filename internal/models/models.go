@@ -15,6 +15,8 @@ type MenuItem struct {
 	Name         string
 	Variant      string
 	Price        int
+	Available    bool
+	BestSeller   bool
 }
 
 type CartItem struct {

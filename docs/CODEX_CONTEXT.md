@@ -82,6 +82,8 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml HOST=127.0.0.1 PORT=8080 .
 
 - Categories on the POS filter the visible menu instead of scrolling.
 - POS menu display groups variants under one dish card; multi-variant dishes open a variant chooser modal before adding to cart.
+- Items marked unavailable in admin are hidden from POS and cannot be added to cart.
+- `Best Sellers` is a derived POS preset tab from item flags, not a real category; items still keep their original category.
 - Cart state is in memory per `session_id` cookie.
 - Invoice numbers come from `MAX(invoices.id) + 1`; the visible order number should not be hardcoded.
 - Sales modal shows:
@@ -97,7 +99,7 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml HOST=127.0.0.1 PORT=8080 .
 - Category deletion is blocked in service code while any menu items still use that category.
 - Category management opens in a `Manage Categories` modal from the admin action strip.
 - New category creation is at the top of the `Manage Categories` modal.
-- Menu rows support category, item name, variant, price, save, and delete.
+- Menu rows support category, item name, variant, price, taking-orders availability, best-seller preset membership, save, and delete.
 - Save uses a floppy disk icon; delete uses a trash icon.
 - Price inputs hide browser number spinners.
 - The menu item table has client-side search and category filtering, plus a live visible-row count and empty state.
@@ -109,6 +111,7 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml HOST=127.0.0.1 PORT=8080 .
 
 - `categories.name` is unique.
 - `menu_items` has a uniqueness constraint on `(category_id, name, variant)`.
+- `menu_items.available` controls POS visibility/orderability; `menu_items.best_seller` controls the derived Best Sellers preset.
 - `invoices.created_at` defaults to SQLite `CURRENT_TIMESTAMP`.
 - `app_settings` stores simple app configuration, including `restaurant_name`.
 - `TodaySales()` uses SQLite local-date comparison:

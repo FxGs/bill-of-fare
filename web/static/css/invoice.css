@@ -176,7 +176,12 @@ body:not(.pos-screen) {
   overflow-y: auto;
   color: #111827;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  scrollbar-gutter: stable;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.invoice-preview-receipt::-webkit-scrollbar {
+  display: none;
 }
 
 .invoice-preview-restaurant {
@@ -385,4 +390,3 @@ body:not(.pos-screen) {
   font-weight: 800;
   text-decoration: none;
 }
-

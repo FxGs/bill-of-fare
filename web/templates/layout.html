@@ -45,6 +45,17 @@
     <div id="sales-modal-content"></div>
   </dialog>
   <script>
+    function syncMenuCardCounts(counts = {}) {
+      document.querySelectorAll("[data-menu-card-count]").forEach((badge) => {
+        const next = counts[badge.dataset.menuCardCount] || 0;
+        badge.textContent = String(next);
+        badge.hidden = next === 0;
+      });
+      document.querySelectorAll("[data-menu-card-id]").forEach((card) => {
+        card.classList.toggle("selected", (counts[card.dataset.menuCardId] || 0) > 0);
+      });
+    }
+
     (() => {
       const clock = document.getElementById("topbar-clock");
       const updateClock = () => {
@@ -76,21 +87,23 @@
     </div>
     <div class="category-items category-color {{.ColorClass}}">
     {{range .Items}}
-    <article class="menu-card">
+    {{if not .Available}}
+    <button class="menu-card menu-card-action unavailable" type="button" disabled aria-label="{{.Name}} unavailable" data-menu-card-id="{{.CountKey}}">
+    {{else if .HasChoices}}
+    <button class="menu-card menu-card-action {{if gt .SelectedCount 0}}selected{{end}}" type="button" onclick="document.getElementById('variant-modal-{{.ID}}').showModal()" aria-label="Choose {{.Name}} variant" data-menu-card-id="{{.CountKey}}">
+    {{else}}
+    <button class="menu-card menu-card-action {{if gt .SelectedCount 0}}selected{{end}}" type="button" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" aria-label="Add {{.Name}}" data-menu-card-id="{{.CountKey}}">
+    {{end}}
+      <span class="menu-card-count" data-menu-card-count="{{.CountKey}}" {{if eq .SelectedCount 0}}hidden{{end}}>{{.SelectedCount}}</span>
       <div>
         <p class="menu-card-category">{{.CategoryName}}</p>
         <h2>{{.Name}}</h2>
-        {{if .HasChoices}}<p class="menu-card-detail">{{len .Variants}} variants</p>{{else}}{{range .Variants}}{{if .Variant}}<p class="menu-card-detail">{{.Variant}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}{{end}}{{end}}
+        {{if not .Available}}<p class="menu-card-detail">Unavailable</p>{{else if .HasChoices}}<p class="menu-card-detail">{{len .Variants}} variants</p>{{else}}{{range .Variants}}{{if .Variant}}<p class="menu-card-detail">{{.Variant}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}{{end}}{{end}}
       </div>
       <div class="menu-card-footer">
         <strong>{{.PriceLabel}}</strong>
-        {{if .HasChoices}}
-        <button class="add-button" onclick="document.getElementById('variant-modal-{{.ID}}').showModal()" aria-label="Choose {{.Name}} variant">Choose</button>
-        {{else}}
-        <button class="add-button" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" aria-label="Add {{.Name}}">Add</button>
-        {{end}}
       </div>
-    </article>
+    </button>
     {{if .HasChoices}}
     <dialog class="variant-modal" id="variant-modal-{{.ID}}" aria-labelledby="variant-title-{{.ID}}">
       <section class="variant-card">
@@ -105,10 +118,17 @@
         </div>
         <div class="variant-list">
           {{range .Variants}}
+          {{if .Available}}
           <button class="variant-choice" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" onclick="this.closest('dialog').close()" aria-label="Add {{.Name}} {{.Variant}}">
             <span>{{if .Variant}}{{.Variant}}{{else}}Regular{{end}}</span>
             <strong>₹{{.Price}}</strong>
           </button>
+          {{else}}
+          <button class="variant-choice unavailable" type="button" disabled aria-label="{{.Name}} {{.Variant}} unavailable">
+            <span>{{if .Variant}}{{.Variant}}{{else}}Regular{{end}} <small>Unavailable</small></span>
+            <strong>₹{{.Price}}</strong>
+          </button>
+          {{end}}
           {{end}}
         </div>
       </section>
