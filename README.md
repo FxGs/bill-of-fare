@@ -46,11 +46,11 @@ VERSION=1.2.0 ./scripts/package-windows.sh
 
 ## Releases
 
-Create a GitHub Release by pushing a tag in `x.y.z` format:
+Create a GitHub Release by pushing a tag in `x.y.z` or `vx.y.z` format:
 
 ```bash
-git tag 1.2.0
-git push origin 1.2.0
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 GitHub Actions builds a Windows `x64` ZIP file, stamps the app header with the tag version, and attaches the package to the release.
