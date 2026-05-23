@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go tests and coverage
+    runs-on: ubuntu-latest
+    container: golang:1.25-alpine
+
+    steps:
+      - name: Install git
+        run: apk add --no-cache git
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test
+        run: go test ./...
+
+      - name: Check internal coverage
+        run: |
+          go test ./internal/... -coverprofile=coverage.out
+          coverage="$(go tool cover -func=coverage.out | awk '/^total:/ {gsub(/%/, "", $3); print $3}')"
+          echo "Internal coverage: ${coverage}%"
+          awk -v coverage="$coverage" 'BEGIN { exit !(coverage >= 90) }'
+
+  ui:
+    name: UI tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run UI tests
+        run: npm run test:ui
