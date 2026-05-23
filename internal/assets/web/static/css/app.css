@@ -1194,6 +1194,10 @@ body.pos-screen {
   width: min(460px, calc(100vw - 32px));
 }
 
+.admin-invoices-modal {
+  width: min(860px, calc(100vw - 32px));
+}
+
 .admin-modal::backdrop {
   background: rgba(7, 6, 4, 0.72);
 }
@@ -1228,6 +1232,13 @@ body.pos-screen {
   margin: 0;
 }
 
+.admin-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .admin-modal-form {
   display: grid;
   gap: 12px;
@@ -1241,6 +1252,84 @@ body.pos-screen {
 
 .admin-confirm-actions {
   grid-template-columns: 1fr 1fr;
+}
+
+.admin-invoice-list {
+  max-height: min(560px, calc(100vh - 190px));
+  overflow-y: auto;
+  padding: 14px;
+  scrollbar-color: var(--accent) #211d15;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.admin-invoice-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.admin-invoice-list::-webkit-scrollbar-track {
+  background: #211d15;
+  border-radius: 999px;
+}
+
+.admin-invoice-list::-webkit-scrollbar-thumb {
+  border: 2px solid #211d15;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.admin-invoice-head,
+.admin-invoice-row {
+  display: grid;
+  grid-template-columns: 92px minmax(180px, 1fr) 80px 100px 76px;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-invoice-head {
+  padding: 0 0 10px;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-invoice-row {
+  min-height: 46px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #211d15;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+}
+
+.admin-invoice-row + .admin-invoice-row {
+  margin-top: 8px;
+}
+
+.admin-invoice-row strong {
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+.admin-invoice-row a {
+  display: inline-grid;
+  place-items: center;
+  min-height: 30px;
+  border-radius: 5px;
+  background: #2a2418;
+  color: var(--accent-2);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-invoice-row a:hover,
+.admin-invoice-row a:focus {
+  background: var(--accent);
+  color: #1b1309;
 }
 
 body:not(.pos-screen) {

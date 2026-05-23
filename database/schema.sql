@@ -30,3 +30,11 @@ CREATE TABLE IF NOT EXISTS invoice_items (
   subtotal INTEGER NOT NULL,
   FOREIGN KEY(invoice_id) REFERENCES invoices(id)
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+INSERT OR IGNORE INTO app_settings(key, value)
+VALUES ('restaurant_name', 'Bill of Fare');

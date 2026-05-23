@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Build Windows x64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate version tag
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tags must use x.y.z, for example 1.2.0"
+            exit 1
+          fi
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build executable
+        env:
+          VERSION: ${{ github.ref_name }}
+          GOOS: windows
+          GOARCH: amd64
+        run: |
+          mkdir -p "dist/BillOfFare-${VERSION}-windows-x64"
+          go build -trimpath -ldflags="-s -w -X bill-of-fare/internal/build.Version=${VERSION}" \
+            -o "dist/BillOfFare-${VERSION}-windows-x64/BillOfFare.exe" ./cmd/desktop
+          {
+            echo "Bill of Fare for Windows"
+            echo
+            echo "Double-click BillOfFare.exe to start the local POS."
+            echo "It will open the app in your default browser automatically."
+            echo
+            echo "The executable contains the server, web UI, database schema, and starter menu."
+            echo "No Go installation or separate app files are required."
+            echo
+            echo "Data is stored per Windows user in:"
+            echo "%AppData%\\Bill of Fare\\bill_of_fare.db"
+            echo
+            echo "To stop the app, close the BillOfFare.exe console window."
+          } > "dist/BillOfFare-${VERSION}-windows-x64/README.txt"
+
+      - name: Package zip
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          cd dist
+          zip -r "BillOfFare-${VERSION}-windows-x64.zip" "BillOfFare-${VERSION}-windows-x64"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          gh release create "$VERSION" dist/*.zip \
+            --title "Bill of Fare ${VERSION}" \
+            --notes "Windows desktop release for Bill of Fare ${VERSION}."

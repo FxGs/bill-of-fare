@@ -161,6 +161,55 @@ func (s InvoiceService) Get(id int) (models.Invoice, error) {
 	return inv, rows.Err()
 }
 
+func (s InvoiceService) List(limit int) ([]models.InvoiceSummary, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	rows, err := s.DB.Query(`
+		SELECT i.id, i.created_at, COUNT(ii.id), i.total
+		FROM invoices i
+		LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
+		GROUP BY i.id
+		ORDER BY i.id DESC
+		LIMIT ?`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invoices := []models.InvoiceSummary{}
+	for rows.Next() {
+		var inv models.InvoiceSummary
+		if err := rows.Scan(&inv.ID, &inv.CreatedAt, &inv.ItemCount, &inv.Total); err != nil {
+			return nil, err
+		}
+		invoices = append(invoices, inv)
+	}
+	return invoices, rows.Err()
+}
+
+func (s InvoiceService) ExportRows() ([]models.InvoiceExportRow, error) {
+	rows, err := s.DB.Query(`
+		SELECT i.id, i.created_at, ii.item_name, ii.quantity, ii.unit_price, ii.subtotal, i.total
+		FROM invoices i
+		JOIN invoice_items ii ON ii.invoice_id = i.id
+		ORDER BY i.id DESC, ii.id ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	exportRows := []models.InvoiceExportRow{}
+	for rows.Next() {
+		var row models.InvoiceExportRow
+		if err := rows.Scan(&row.InvoiceID, &row.CreatedAt, &row.ItemName, &row.Quantity, &row.UnitPrice, &row.Subtotal, &row.InvoiceTotal); err != nil {
+			return nil, err
+		}
+		exportRows = append(exportRows, row)
+	}
+	return exportRows, rows.Err()
+}
+
 func (s InvoiceService) NextNumber() (int, error) {
 	var next int
 	err := s.DB.QueryRow("SELECT COALESCE(MAX(id), 0) + 1 FROM invoices").Scan(&next)
