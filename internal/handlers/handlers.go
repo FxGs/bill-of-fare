@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"time"
 
 	"bill-of-fare/internal/models"
 	"bill-of-fare/internal/services"
@@ -97,7 +98,7 @@ func (h Handler) cartFragment(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	orderNumber, _ := h.Invoices.NextNumber()
-	_ = h.Tpl.ExecuteTemplate(w, "cart", map[string]any{"CartItems": items, "Total": total, "OrderNumber": orderNumber})
+	_ = h.Tpl.ExecuteTemplate(w, "cart", map[string]any{"CartItems": items, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()})
 }
 func (h Handler) salesSummary(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
@@ -189,6 +190,10 @@ func (h Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	if len(items) == 0 {
+		if r.Header.Get("HX-Request") == "true" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
@@ -199,6 +204,26 @@ func (h Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	h.Cart.RecordSale(s, total)
 	h.Cart.Clear(s)
+	if r.Header.Get("HX-Request") == "true" {
+		inv, err := h.Invoices.Get(id)
+		if err != nil {
+			http.Error(w, "invoice not found", 404)
+			return
+		}
+		orderNumber, _ := h.Invoices.NextNumber()
+		_ = h.Tpl.ExecuteTemplate(w, "invoice-created", map[string]any{
+			"Invoice":        inv,
+			"RestaurantName": h.Settings.RestaurantName(),
+			"CartData": map[string]any{
+				"CartItems":      []models.CartItem{},
+				"Total":          0,
+				"OrderNumber":    orderNumber,
+				"PreviewTime":    time.Now(),
+				"RestaurantName": h.Settings.RestaurantName(),
+			},
+		})
+		return
+	}
 	http.Redirect(w, r, "/invoice?id="+strconv.Itoa(id)+"&print=1", http.StatusSeeOther)
 }
 func (h Handler) viewInvoice(w http.ResponseWriter, r *http.Request) {
@@ -234,7 +259,7 @@ func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	orderNumber, _ := h.Invoices.NextNumber()
-	return map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber}
+	return map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()}
 }
 
 func (h Handler) appVersion() string {

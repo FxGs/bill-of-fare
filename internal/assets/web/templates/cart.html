@@ -40,9 +40,105 @@
       <span>Total</span>
       <strong>₹{{.Total}}</strong>
     </div>
-    <form action="/invoice/create" method="post">
-      <button class="print-button" {{if not .CartItems}}disabled{{end}}>Print Invoice</button>
-    </form>
+    <button class="print-button" type="button" onclick="document.getElementById('create-order-modal').showModal()" {{if not .CartItems}}disabled{{end}}>Create Order</button>
   </div>
 </section>
+
+{{if .CartItems}}
+<dialog class="order-confirm-modal" id="create-order-modal" aria-labelledby="create-order-title">
+  <section class="order-confirm-shell">
+    <header>
+      <h2 id="create-order-title">Create order #{{.OrderNumber}}?</h2>
+      <p>Save this order for ₹{{.Total}} and prepare the invoice preview.</p>
+    </header>
+    <div class="order-confirm-actions">
+      <form method="dialog">
+        <button class="order-confirm-secondary">Cancel</button>
+      </form>
+      <form action="/invoice/create" method="post" hx-post="/invoice/create" hx-target="#invoice-preview-host" hx-swap="innerHTML" onsubmit="this.closest('dialog').close()">
+        <button class="order-confirm-primary">Yes, Create Order</button>
+      </form>
+    </div>
+  </section>
+</dialog>
+{{end}}
+{{end}}
+
+{{define "invoice-created"}}
+{{template "invoice-preview-dialog" .}}
+<div hx-swap-oob="innerHTML:#cart">{{template "cart" .CartData}}</div>
+<script>
+  requestAnimationFrame(() => {
+    document.getElementById("invoice-preview-modal")?.showModal();
+  });
+</script>
+{{end}}
+
+{{define "invoice-preview-dialog"}}
+<dialog class="invoice-preview-modal" id="invoice-preview-modal" aria-labelledby="invoice-preview-title">
+  <section class="invoice-preview-shell">
+    <header class="invoice-preview-header no-print">
+      <h2 id="invoice-preview-title">Invoice Preview</h2>
+      <div class="invoice-preview-actions">
+        <a class="invoice-preview-print" href="/invoice?id={{.Invoice.ID}}&print=1" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 8V4h10v4"></path>
+            <path d="M7 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <path d="M7 14h10v6H7z"></path>
+          </svg>
+          Print
+        </a>
+        <form method="dialog">
+          <button class="invoice-preview-close" aria-label="Close">×</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="invoice-preview-receipt">
+      <div class="invoice-preview-restaurant">
+        <h3>{{.RestaurantName}}</h3>
+      </div>
+
+      <div class="invoice-preview-rule"></div>
+
+      <div class="invoice-preview-meta">
+        <strong>Order #{{.Invoice.ID}}</strong>
+        <span>{{.Invoice.CreatedAt.Format "02 Jan 2006, 15:04"}}</span>
+      </div>
+
+      <div class="invoice-preview-rule"></div>
+
+      <div class="invoice-preview-table-head">
+        <span>Item</span>
+        <span>Amount</span>
+      </div>
+
+      <div class="invoice-preview-lines">
+        {{range .Invoice.Items}}
+        <div class="invoice-preview-line">
+          <div>
+            <strong>{{.Quantity}}× {{.ItemName}}</strong>
+            <span>@ ₹{{.UnitPrice}} each</span>
+          </div>
+          <strong>₹{{.Subtotal}}</strong>
+        </div>
+        {{end}}
+      </div>
+
+      <div class="invoice-preview-rule"></div>
+
+      <div class="invoice-preview-total">
+        <strong>Total</strong>
+        <strong>₹{{.Invoice.Total}}</strong>
+      </div>
+
+      <div class="invoice-preview-rule"></div>
+
+      <p class="invoice-preview-thanks">
+        Thank you for dining with us.<br>
+        We hope to see you again soon.
+      </p>
+    </div>
+  </section>
+</dialog>
 {{end}}
