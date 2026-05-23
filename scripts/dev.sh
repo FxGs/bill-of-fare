@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DB_PATH="${DB_PATH:-$ROOT_DIR/bill_of_fare.db}"
 MENU_PATH="${MENU_PATH:-$ROOT_DIR/seed/menu.yaml}"
 PORT="${PORT:-8080}"
+HOST="${HOST:-127.0.0.1}"
 BIN_PATH="${TMPDIR:-/tmp}/bill-of-fare-dev-server"
 
 cd "$ROOT_DIR"
@@ -32,8 +33,8 @@ snapshot() {
 start_server() {
   cleanup
   go build -o "$BIN_PATH" ./cmd/server
-  echo "Starting Bill of Fare on http://localhost:$PORT"
-  DB_PATH="$DB_PATH" PORT="$PORT" "$BIN_PATH" &
+  echo "Starting Bill of Fare on http://$HOST:$PORT"
+  DB_PATH="$DB_PATH" HOST="$HOST" PORT="$PORT" "$BIN_PATH" &
   server_pid="$!"
 }
 
