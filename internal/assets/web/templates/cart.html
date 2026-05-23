@@ -1,5 +1,48 @@
 {{define "cart"}}
-<div class="card"><div class="card-header">Cart</div><div class="card-body">
-{{if .CartItems}}<ul class="list-group mb-3">{{range .CartItems}}<li class="list-group-item"><div class="d-flex justify-content-between"><div>{{.MenuItem.Name}}{{if .MenuItem.Variant}} ({{.MenuItem.Variant}}){{end}}<br><small>₹{{.MenuItem.Price}} × {{.Quantity}}</small></div><div>₹{{.Subtotal}}</div></div><div class="mt-2"><button class="btn btn-sm btn-outline-secondary" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"1"}' hx-target="#cart">+</button><button class="btn btn-sm btn-outline-secondary" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"-1"}' hx-target="#cart">-</button><button class="btn btn-sm btn-outline-danger" hx-post="/cart/remove" hx-vals='{"key":"{{.Key}}"}' hx-target="#cart">Remove</button></div></li>{{end}}</ul><h5>Total: ₹{{.Total}}</h5><form action="/invoice/create" method="post"><button class="btn btn-success">Generate Invoice</button></form>{{else}}<p class="mb-0">Cart is empty.</p>{{end}}
-</div></div>
+<section class="order-card">
+  <div class="order-header">
+    <div>
+      <p>Order</p>
+      <span>#854</span>
+    </div>
+    <strong>₹{{.Total}}</strong>
+  </div>
+
+  {{if .CartItems}}
+  <ul class="order-list">
+    {{range .CartItems}}
+    <li class="order-item">
+      <div class="order-item-main">
+        <div>
+          <h3>{{.MenuItem.Name}}</h3>
+          <p>{{if .MenuItem.Variant}}{{.MenuItem.Variant}} · {{end}}₹{{.MenuItem.Price}} each</p>
+        </div>
+        <strong>₹{{.Subtotal}}</strong>
+      </div>
+      <div class="order-controls">
+        <button class="qty-button" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"-1"}' hx-target="#cart" aria-label="Decrease quantity">−</button>
+        <span>{{.Quantity}}</span>
+        <button class="qty-button" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"1"}' hx-target="#cart" aria-label="Increase quantity">+</button>
+        <button class="remove-button" hx-post="/cart/remove" hx-vals='{"key":"{{.Key}}"}' hx-target="#cart">Remove</button>
+      </div>
+    </li>
+    {{end}}
+  </ul>
+  {{else}}
+  <div class="empty-order">
+    <div class="empty-order-mark">⌘</div>
+    <p>No items added yet</p>
+  </div>
+  {{end}}
+
+  <div class="order-summary">
+    <div>
+      <span>Total</span>
+      <strong>₹{{.Total}}</strong>
+    </div>
+    <form action="/invoice/create" method="post">
+      <button class="print-button" {{if not .CartItems}}disabled{{end}}>Print Invoice</button>
+    </form>
+  </div>
+</section>
 {{end}}
