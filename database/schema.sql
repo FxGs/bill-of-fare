@@ -1,0 +1,32 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS menu_items (
+  id INTEGER PRIMARY KEY,
+  category_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  variant TEXT,
+  price INTEGER NOT NULL,
+  UNIQUE(category_id, name, COALESCE(variant, '')),
+  FOREIGN KEY(category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE IF NOT EXISTS invoices (
+  id INTEGER PRIMARY KEY,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  total INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS invoice_items (
+  id INTEGER PRIMARY KEY,
+  invoice_id INTEGER NOT NULL,
+  item_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL,
+  unit_price INTEGER NOT NULL,
+  subtotal INTEGER NOT NULL,
+  FOREIGN KEY(invoice_id) REFERENCES invoices(id)
+);

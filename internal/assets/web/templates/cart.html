@@ -1,0 +1,42 @@
+{{define "cart"}}
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-cart3 me-2"></i>Current Cart</span>
+    <span class="badge text-bg-light">{{len .CartItems}}</span>
+  </div>
+  <div class="card-body">
+    {{if .CartItems}}
+      <ul class="list-group list-group-flush mb-3">
+        {{range .CartItems}}
+        <li class="list-group-item px-0">
+          <div class="d-flex justify-content-between">
+            <div>
+              <div class="fw-semibold">{{.MenuItem.Name}}{{if .MenuItem.Variant}} <span class="text-secondary">({{.MenuItem.Variant}})</span>{{end}}</div>
+              <small class="text-secondary">₹{{.MenuItem.Price}} × {{.Quantity}}</small>
+            </div>
+            <div class="fw-bold">₹{{.Subtotal}}</div>
+          </div>
+          <div class="mt-2 btn-group btn-group-sm" role="group">
+            <button class="btn btn-outline-secondary" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"1"}' hx-target="#cart"><i class="bi bi-plus"></i></button>
+            <button class="btn btn-outline-secondary" hx-post="/cart/qty" hx-vals='{"key":"{{.Key}}","delta":"-1"}' hx-target="#cart"><i class="bi bi-dash"></i></button>
+            <button class="btn btn-outline-danger" hx-post="/cart/remove" hx-vals='{"key":"{{.Key}}"}' hx-target="#cart"><i class="bi bi-trash"></i></button>
+          </div>
+        </li>
+        {{end}}
+      </ul>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-secondary">Grand Total</span>
+        <span class="h4 mb-0">₹{{.Total}}</span>
+      </div>
+      <form action="/invoice/create" method="post" class="d-grid">
+        <button class="btn btn-success btn-lg"><i class="bi bi-receipt-cutoff me-1"></i>Generate Invoice</button>
+      </form>
+    {{else}}
+      <div class="text-center py-4">
+        <i class="bi bi-basket text-secondary" style="font-size:2rem"></i>
+        <p class="mb-0 mt-2 text-secondary">Cart is empty.</p>
+      </div>
+    {{end}}
+  </div>
+</div>
+{{end}}
