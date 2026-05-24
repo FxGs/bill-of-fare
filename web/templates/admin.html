@@ -75,6 +75,8 @@
             <span>Item</span>
             <span>Variant</span>
             <span>Price</span>
+            <span>Orders</span>
+            <span>Preset</span>
             <span class="admin-actions-head">Actions</span>
           </div>
           {{range .Items}}
@@ -90,6 +92,14 @@
               <input name="name" value="{{.Name}}" aria-label="Item name" required>
               <input name="variant" value="{{.Variant}}" aria-label="Variant">
               <input name="price" value="{{.Price}}" type="number" inputmode="numeric" min="0" step="1" aria-label="Price" required>
+              <label class="admin-toggle-cell" title="Allow this item to be ordered">
+                <input name="available" type="checkbox" {{if .Available}}checked{{end}}>
+                <span>Open</span>
+              </label>
+              <label class="admin-toggle-cell" title="Show this item in Best Sellers">
+                <input name="best_seller" type="checkbox" {{if .BestSeller}}checked{{end}}>
+                <span>Best</span>
+              </label>
               <button class="admin-icon-button admin-save-button" aria-label="Save {{.Name}}" title="Save">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M5 3h12l2 2v16H5z"></path>

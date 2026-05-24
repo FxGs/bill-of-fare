@@ -209,7 +209,7 @@ func TestAdminPageAndAdminMutationRoutes(t *testing.T) {
 		}
 	}
 	rec = httptest.NewRecorder()
-	req = formRequest(http.MethodPost, "/admin/items/update", url.Values{"id": {strconv.Itoa(panna.ID)}, "category_id": {strconv.Itoa(dessertID)}, "name": {"Panna Cotta"}, "variant": {"Mini"}, "price": {"90"}})
+	req = formRequest(http.MethodPost, "/admin/items/update", url.Values{"id": {strconv.Itoa(panna.ID)}, "category_id": {strconv.Itoa(dessertID)}, "name": {"Panna Cotta"}, "variant": {"Mini"}, "price": {"90"}, "available": {"on"}, "best_seller": {"on"}})
 	h.Routes().ServeHTTP(rec, req)
 	assertStatus(t, rec, http.StatusSeeOther)
 
@@ -217,8 +217,8 @@ func TestAdminPageAndAdminMutationRoutes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetMenuItem updated: %v", err)
 	}
-	if updated.Variant != "Mini" || updated.Price != 90 {
-		t.Fatalf("updated item = %+v, want Mini 90", updated)
+	if updated.Variant != "Mini" || updated.Price != 90 || !updated.BestSeller || !updated.Available {
+		t.Fatalf("updated item = %+v, want Mini 90 available best seller", updated)
 	}
 
 	rec = httptest.NewRecorder()
@@ -236,6 +236,57 @@ func TestAdminPageAndAdminMutationRoutes(t *testing.T) {
 	h.Routes().ServeHTTP(rec, req)
 	assertStatus(t, rec, http.StatusBadRequest)
 	assertContains(t, rec.Body.String(), "delete or move 1 menu items")
+}
+
+func TestBestSellerPresetAndUnavailableItems(t *testing.T) {
+	h := newTestHandler(t)
+	if err := h.Menu.CreateCategory("Mains"); err != nil {
+		t.Fatalf("CreateCategory Mains: %v", err)
+	}
+	if err := h.Menu.CreateCategory("Drinks"); err != nil {
+		t.Fatalf("CreateCategory Drinks: %v", err)
+	}
+	cats, _ := h.Menu.ListCategories()
+	var mainsID, drinksID int
+	for _, c := range cats {
+		if c.Name == "Mains" {
+			mainsID = c.ID
+		}
+		if c.Name == "Drinks" {
+			drinksID = c.ID
+		}
+	}
+	if err := h.Menu.CreateMenuItem(mainsID, "", "Paneer Tikka", "", 180); err != nil {
+		t.Fatalf("CreateMenuItem Paneer: %v", err)
+	}
+	if err := h.Menu.CreateMenuItem(drinksID, "", "Lassi", "", 70); err != nil {
+		t.Fatalf("CreateMenuItem Lassi: %v", err)
+	}
+	items, _ := h.Menu.ListMenuItems()
+	for _, item := range items {
+		switch item.Name {
+		case "Paneer Tikka":
+			if err := h.Menu.UpdateMenuItem(item.ID, item.CategoryID, item.Name, item.Variant, item.Price, true, true); err != nil {
+				t.Fatalf("mark best seller: %v", err)
+			}
+		case "Lassi":
+			if err := h.Menu.UpdateMenuItem(item.ID, item.CategoryID, item.Name, item.Variant, item.Price, false, true); err != nil {
+				t.Fatalf("mark unavailable: %v", err)
+			}
+		}
+	}
+
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	assertStatus(t, rec, http.StatusOK)
+	body := rec.Body.String()
+	assertContains(t, body, "Best Sellers", "Paneer Tikka", "Lassi", "Unavailable")
+
+	rec = httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/menu?category_id="+strconv.Itoa(services.BestSellersCategoryID), nil))
+	assertStatus(t, rec, http.StatusOK)
+	body = rec.Body.String()
+	assertContains(t, body, "Best Sellers", "Paneer Tikka", "Lassi", "Mains", "Unavailable")
 }
 
 func TestAdminSettingsAndInvoiceExportRoutes(t *testing.T) {

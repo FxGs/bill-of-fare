@@ -35,6 +35,18 @@ func TestOpenAppliesSchemaAndDefaultSettings(t *testing.T) {
 	if restaurantName != "Bill of Fare" {
 		t.Fatalf("restaurant name = %q, want Bill of Fare", restaurantName)
 	}
+
+	for _, column := range []string{"available", "best_seller"} {
+		t.Run("menu_items_"+column, func(t *testing.T) {
+			var count int
+			if err := database.QueryRow("SELECT COUNT(*) FROM pragma_table_info('menu_items') WHERE name = ?", column).Scan(&count); err != nil {
+				t.Fatalf("inspect menu_items column %s: %v", column, err)
+			}
+			if count != 1 {
+				t.Fatalf("menu_items column %s count = %d, want 1", column, count)
+			}
+		})
+	}
 }
 
 func TestOpenReturnsErrorForInvalidPath(t *testing.T) {

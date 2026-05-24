@@ -9,12 +9,27 @@ import (
 
 type MenuService struct{ DB *sql.DB }
 
+const BestSellersCategoryID = -1
+
 func (s MenuService) ListCategoriesWithItems() ([]models.Category, error) {
-	rows, err := s.DB.Query(`
-		SELECT c.id, c.name, m.id, m.name, COALESCE(m.variant, ''), m.price
+	return s.listCategoriesWithItems(`
+		SELECT c.id, c.name, m.id, m.name, COALESCE(m.variant, ''), m.price, m.available, m.best_seller
 		FROM categories c
 		JOIN menu_items m ON m.category_id = c.id
 		ORDER BY c.name, m.name, m.variant`)
+}
+
+func (s MenuService) ListBestSellerItems() ([]models.Category, error) {
+	return s.listCategoriesWithItems(`
+		SELECT c.id, c.name, m.id, m.name, COALESCE(m.variant, ''), m.price, m.available, m.best_seller
+		FROM categories c
+		JOIN menu_items m ON m.category_id = c.id
+		WHERE m.best_seller = 1
+		ORDER BY c.name, m.name, m.variant`)
+}
+
+func (s MenuService) listCategoriesWithItems(query string) ([]models.Category, error) {
+	rows, err := s.DB.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("query menu: %w", err)
 	}
@@ -25,15 +40,16 @@ func (s MenuService) ListCategoriesWithItems() ([]models.Category, error) {
 
 	for rows.Next() {
 		var cID, mID, price int
+		var available, bestSeller bool
 		var cName, mName, variant string
-		if err := rows.Scan(&cID, &cName, &mID, &mName, &variant, &price); err != nil {
+		if err := rows.Scan(&cID, &cName, &mID, &mName, &variant, &price, &available, &bestSeller); err != nil {
 			return nil, fmt.Errorf("scan menu row: %w", err)
 		}
 		if _, ok := idx[cID]; !ok {
 			idx[cID] = len(cats)
 			cats = append(cats, models.Category{ID: cID, Name: cName})
 		}
-		cats[idx[cID]].Items = append(cats[idx[cID]].Items, models.MenuItem{ID: mID, CategoryID: cID, CategoryName: cName, Name: mName, Variant: variant, Price: price})
+		cats[idx[cID]].Items = append(cats[idx[cID]].Items, models.MenuItem{ID: mID, CategoryID: cID, CategoryName: cName, Name: mName, Variant: variant, Price: price, Available: available, BestSeller: bestSeller})
 	}
 	return cats, rows.Err()
 }
@@ -41,9 +57,9 @@ func (s MenuService) ListCategoriesWithItems() ([]models.Category, error) {
 func (s MenuService) GetMenuItem(id int) (models.MenuItem, error) {
 	var m models.MenuItem
 	err := s.DB.QueryRow(`
-		SELECT m.id, m.category_id, c.name, m.name, COALESCE(m.variant, ''), m.price
+		SELECT m.id, m.category_id, c.name, m.name, COALESCE(m.variant, ''), m.price, m.available, m.best_seller
 		FROM menu_items m JOIN categories c ON c.id = m.category_id
-		WHERE m.id = ?`, id).Scan(&m.ID, &m.CategoryID, &m.CategoryName, &m.Name, &m.Variant, &m.Price)
+		WHERE m.id = ? AND m.available = 1`, id).Scan(&m.ID, &m.CategoryID, &m.CategoryName, &m.Name, &m.Variant, &m.Price, &m.Available, &m.BestSeller)
 	if err != nil {
 		return models.MenuItem{}, err
 	}
@@ -70,7 +86,7 @@ func (s MenuService) ListCategories() ([]models.Category, error) {
 
 func (s MenuService) ListMenuItems() ([]models.MenuItem, error) {
 	rows, err := s.DB.Query(`
-		SELECT m.id, m.category_id, c.name, m.name, COALESCE(m.variant, ''), m.price
+		SELECT m.id, m.category_id, c.name, m.name, COALESCE(m.variant, ''), m.price, m.available, m.best_seller
 		FROM menu_items m
 		JOIN categories c ON c.id = m.category_id
 		ORDER BY c.name, m.name, m.variant`)
@@ -82,7 +98,7 @@ func (s MenuService) ListMenuItems() ([]models.MenuItem, error) {
 	items := []models.MenuItem{}
 	for rows.Next() {
 		var m models.MenuItem
-		if err := rows.Scan(&m.ID, &m.CategoryID, &m.CategoryName, &m.Name, &m.Variant, &m.Price); err != nil {
+		if err := rows.Scan(&m.ID, &m.CategoryID, &m.CategoryName, &m.Name, &m.Variant, &m.Price, &m.Available, &m.BestSeller); err != nil {
 			return nil, fmt.Errorf("scan menu item: %w", err)
 		}
 		items = append(items, m)
@@ -98,7 +114,7 @@ func (s MenuService) CreateMenuItem(categoryID int, newCategory, name, variant s
 	if err != nil {
 		return err
 	}
-	_, err = s.DB.Exec(`INSERT INTO menu_items(category_id, name, variant, price) VALUES(?,?,?,?)`, cid, name, variant, price)
+	_, err = s.DB.Exec(`INSERT INTO menu_items(category_id, name, variant, price, available, best_seller) VALUES(?,?,?,?,1,0)`, cid, name, variant, price)
 	if err != nil {
 		return fmt.Errorf("insert menu item: %w", err)
 	}
@@ -134,11 +150,11 @@ func (s MenuService) DeleteCategory(id int) error {
 	return nil
 }
 
-func (s MenuService) UpdateMenuItem(id, categoryID int, name, variant string, price int) error {
+func (s MenuService) UpdateMenuItem(id, categoryID int, name, variant string, price int, available, bestSeller bool) error {
 	if id <= 0 || categoryID <= 0 || name == "" || price < 0 {
 		return fmt.Errorf("valid id, category, name, and non-negative price are required")
 	}
-	_, err := s.DB.Exec(`UPDATE menu_items SET category_id = ?, name = ?, variant = ?, price = ? WHERE id = ?`, categoryID, name, variant, price, id)
+	_, err := s.DB.Exec(`UPDATE menu_items SET category_id = ?, name = ?, variant = ?, price = ?, available = ?, best_seller = ? WHERE id = ?`, categoryID, name, variant, price, available, bestSeller, id)
 	if err != nil {
 		return fmt.Errorf("update menu item: %w", err)
 	}

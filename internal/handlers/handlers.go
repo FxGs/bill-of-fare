@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -29,12 +30,15 @@ type menuDisplayCategory struct {
 }
 
 type menuDisplayItem struct {
-	ID           int
-	CategoryName string
-	Name         string
-	Variants     []models.MenuItem
-	PriceLabel   string
-	HasChoices   bool
+	ID            int
+	CategoryName  string
+	Name          string
+	Variants      []models.MenuItem
+	PriceLabel    string
+	HasChoices    bool
+	Available     bool
+	SelectedCount int
+	CountKey      string
 }
 
 type menuCategoryTab struct {
@@ -98,7 +102,7 @@ func (h Handler) cartFragment(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	orderNumber, _ := h.Invoices.NextNumber()
-	_ = h.Tpl.ExecuteTemplate(w, "cart", map[string]any{"CartItems": items, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()})
+	_ = h.Tpl.ExecuteTemplate(w, "cart", h.cartData(items, total, orderNumber))
 }
 func (h Handler) salesSummary(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
@@ -139,7 +143,15 @@ func (h Handler) adminCreateItem(w http.ResponseWriter, r *http.Request) {
 }
 func (h Handler) adminUpdateItem(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
-	err := h.Menu.UpdateMenuItem(atoi(r.FormValue("id")), atoi(r.FormValue("category_id")), r.FormValue("name"), r.FormValue("variant"), atoi(r.FormValue("price")))
+	err := h.Menu.UpdateMenuItem(
+		atoi(r.FormValue("id")),
+		atoi(r.FormValue("category_id")),
+		r.FormValue("name"),
+		r.FormValue("variant"),
+		atoi(r.FormValue("price")),
+		r.FormValue("available") == "on",
+		r.FormValue("best_seller") == "on",
+	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -214,13 +226,7 @@ func (h Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 		_ = h.Tpl.ExecuteTemplate(w, "invoice-created", map[string]any{
 			"Invoice":        inv,
 			"RestaurantName": h.Settings.RestaurantName(),
-			"CartData": map[string]any{
-				"CartItems":      []models.CartItem{},
-				"Total":          0,
-				"OrderNumber":    orderNumber,
-				"PreviewTime":    time.Now(),
-				"RestaurantName": h.Settings.RestaurantName(),
-			},
+			"CartData":       h.cartData([]models.CartItem{}, 0, orderNumber),
 		})
 		return
 	}
@@ -239,15 +245,23 @@ func atoi(s string) int { i, _ := strconv.Atoi(s); return i }
 
 func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int) map[string]any {
 	cats, _ := h.Menu.ListCategoriesWithItems()
+	bestSellerCats, _ := h.Menu.ListBestSellerItems()
 	menuCats := cats
 	colorByCategoryID := map[int]string{}
-	categoryTabs := make([]menuCategoryTab, 0, len(cats))
+	categoryTabs := make([]menuCategoryTab, 0, len(cats)+1)
+	if len(bestSellerCats) > 0 {
+		bestSellerColor := menuColorClass(0)
+		colorByCategoryID[services.BestSellersCategoryID] = bestSellerColor
+		categoryTabs = append(categoryTabs, menuCategoryTab{ID: services.BestSellersCategoryID, Name: "Best Sellers", ColorClass: bestSellerColor})
+	}
 	for i, c := range cats {
 		color := menuColorClass(i + 1)
 		colorByCategoryID[c.ID] = color
 		categoryTabs = append(categoryTabs, menuCategoryTab{ID: c.ID, Name: c.Name, ColorClass: color})
 	}
-	if selectedID > 0 {
+	if selectedID == services.BestSellersCategoryID {
+		menuCats = bestSellerPreset(bestSellerCats)
+	} else if selectedID > 0 {
 		menuCats = nil
 		for _, c := range cats {
 			if c.ID == selectedID {
@@ -258,8 +272,22 @@ func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int
 	}
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
+	selectedCounts := menuSelectedCounts(items)
 	orderNumber, _ := h.Invoices.NextNumber()
-	return map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()}
+	return map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID, selectedCounts), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()}
+}
+
+func (h Handler) cartData(items []models.CartItem, total, orderNumber int) map[string]any {
+	counts := menuSelectedCounts(items)
+	countsJSON, _ := json.Marshal(counts)
+	return map[string]any{
+		"CartItems":      items,
+		"Total":          total,
+		"OrderNumber":    orderNumber,
+		"PreviewTime":    time.Now(),
+		"RestaurantName": h.Settings.RestaurantName(),
+		"MenuCountsJSON": template.JS(countsJSON),
+	}
 }
 
 func (h Handler) appVersion() string {
@@ -269,30 +297,66 @@ func (h Handler) appVersion() string {
 	return h.Version
 }
 
-func groupMenuCategories(cats []models.Category, colorByCategoryID map[int]string) []menuDisplayCategory {
+func groupMenuCategories(cats []models.Category, colorByCategoryID map[int]string, selectedCounts map[string]int) []menuDisplayCategory {
 	groupedCats := make([]menuDisplayCategory, 0, len(cats))
 	for _, c := range cats {
 		displayCat := menuDisplayCategory{ID: c.ID, Name: c.Name, ColorClass: colorByCategoryID[c.ID]}
 		itemIndex := map[string]int{}
 		for _, item := range c.Items {
-			if _, ok := itemIndex[item.Name]; !ok {
-				itemIndex[item.Name] = len(displayCat.Items)
+			groupKey := menuCountKey(item.CategoryID, item.Name)
+			if _, ok := itemIndex[groupKey]; !ok {
+				itemIndex[groupKey] = len(displayCat.Items)
 				displayCat.Items = append(displayCat.Items, menuDisplayItem{
 					ID:           item.ID,
 					CategoryName: item.CategoryName,
 					Name:         item.Name,
 				})
 			}
-			idx := itemIndex[item.Name]
+			idx := itemIndex[groupKey]
 			displayCat.Items[idx].Variants = append(displayCat.Items[idx].Variants, item)
 		}
 		for i := range displayCat.Items {
 			displayCat.Items[i].HasChoices = len(displayCat.Items[i].Variants) > 1
+			displayCat.Items[i].Available = menuItemAvailable(displayCat.Items[i].Variants)
 			displayCat.Items[i].PriceLabel = menuPriceLabel(displayCat.Items[i].Variants)
+			displayCat.Items[i].CountKey = menuCountKey(displayCat.Items[i].Variants[0].CategoryID, displayCat.Items[i].Name)
+			displayCat.Items[i].SelectedCount = selectedCounts[displayCat.Items[i].CountKey]
 		}
 		groupedCats = append(groupedCats, displayCat)
 	}
 	return groupedCats
+}
+
+func bestSellerPreset(cats []models.Category) []models.Category {
+	items := []models.MenuItem{}
+	for _, c := range cats {
+		items = append(items, c.Items...)
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	return []models.Category{{ID: services.BestSellersCategoryID, Name: "Best Sellers", Items: items}}
+}
+
+func menuItemAvailable(items []models.MenuItem) bool {
+	for _, item := range items {
+		if item.Available {
+			return true
+		}
+	}
+	return false
+}
+
+func menuSelectedCounts(items []models.CartItem) map[string]int {
+	counts := map[string]int{}
+	for _, item := range items {
+		counts[menuCountKey(item.MenuItem.CategoryID, item.MenuItem.Name)] += item.Quantity
+	}
+	return counts
+}
+
+func menuCountKey(categoryID int, name string) string {
+	return strconv.Itoa(categoryID) + ":" + name
 }
 
 func menuColorClass(index int) string {

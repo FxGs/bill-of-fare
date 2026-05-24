@@ -27,16 +27,40 @@ func TestMenuServiceCreatesUpdatesListsAndDeletesItems(t *testing.T) {
 	if len(items) != 1 || items[0].Name != "Bruschetta" || items[0].Variant != "Regular" || items[0].Price != 95 {
 		t.Fatalf("items = %+v, want Bruschetta Regular 95", items)
 	}
+	if !items[0].Available || items[0].BestSeller {
+		t.Fatalf("new item flags = available %v bestSeller %v, want true false", items[0].Available, items[0].BestSeller)
+	}
 
-	if err := menu.UpdateMenuItem(items[0].ID, cats[0].ID, "Tomato Bruschetta", "", 105); err != nil {
+	if err := menu.UpdateMenuItem(items[0].ID, cats[0].ID, "Tomato Bruschetta", "", 105, true, true); err != nil {
 		t.Fatalf("UpdateMenuItem: %v", err)
 	}
 	updated, err := menu.GetMenuItem(items[0].ID)
 	if err != nil {
 		t.Fatalf("GetMenuItem: %v", err)
 	}
-	if updated.Name != "Tomato Bruschetta" || updated.Variant != "" || updated.Price != 105 {
-		t.Fatalf("updated item = %+v, want Tomato Bruschetta blank variant 105", updated)
+	if updated.Name != "Tomato Bruschetta" || updated.Variant != "" || updated.Price != 105 || !updated.BestSeller {
+		t.Fatalf("updated item = %+v, want Tomato Bruschetta blank variant 105 best seller", updated)
+	}
+	bestSellers, err := menu.ListBestSellerItems()
+	if err != nil {
+		t.Fatalf("ListBestSellerItems: %v", err)
+	}
+	if len(bestSellers) != 1 || len(bestSellers[0].Items) != 1 || bestSellers[0].Items[0].Name != "Tomato Bruschetta" {
+		t.Fatalf("best sellers = %+v, want Tomato Bruschetta", bestSellers)
+	}
+
+	if err := menu.UpdateMenuItem(items[0].ID, cats[0].ID, "Tomato Bruschetta", "", 105, false, true); err != nil {
+		t.Fatalf("UpdateMenuItem unavailable: %v", err)
+	}
+	if _, err := menu.GetMenuItem(items[0].ID); err == nil {
+		t.Fatal("GetMenuItem unavailable succeeded, want error")
+	}
+	visibleCats, err := menu.ListCategoriesWithItems()
+	if err != nil {
+		t.Fatalf("ListCategoriesWithItems unavailable: %v", err)
+	}
+	if len(visibleCats) != 1 || len(visibleCats[0].Items) != 1 || visibleCats[0].Items[0].Available {
+		t.Fatalf("visible categories = %+v, want disabled item still visible", visibleCats)
 	}
 
 	if err := menu.DeleteCategory(cats[0].ID); err == nil {
@@ -97,7 +121,7 @@ func TestMenuServiceValidation(t *testing.T) {
 	if err := menu.CreateMenuItem(1, "", "Soup", "", -1); err == nil {
 		t.Fatal("CreateMenuItem negative price succeeded, want error")
 	}
-	if err := menu.UpdateMenuItem(0, 1, "Soup", "", 100); err == nil {
+	if err := menu.UpdateMenuItem(0, 1, "Soup", "", 100, true, false); err == nil {
 		t.Fatal("UpdateMenuItem invalid id succeeded, want error")
 	}
 	if err := menu.DeleteMenuItem(0); err == nil {

@@ -7,11 +7,12 @@ test.describe("POS browser flows", () => {
     await expect(page.getByRole("heading", { name: "Bill of Fare" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Admin" })).toBeVisible();
 
-    const sandwichCard = page.locator("article.menu-card").filter({ hasText: "Paneer Cheese Grilled Sandwich" });
-    await sandwichCard.getByRole("button", { name: /Add Paneer Cheese Grilled Sandwich/ }).click();
+    const sandwichCard = page.locator(".menu-card").filter({ hasText: "Paneer Cheese Grilled Sandwich" });
+    await sandwichCard.click();
 
     await expect(page.locator(".order-pane")).toContainText("Paneer Cheese Grilled Sandwich");
     await expect(page.locator(".order-pane")).toContainText("₹130");
+    await expect(sandwichCard.locator(".menu-card-count")).toHaveText("1");
 
     await page.getByRole("button", { name: "Create Order" }).click();
     await expect(page.getByRole("heading", { name: /Create order #/ })).toBeVisible();
@@ -22,17 +23,18 @@ test.describe("POS browser flows", () => {
     await expect(page.locator(".invoice-preview-receipt")).toContainText("₹130");
     await expect(page.getByRole("link", { name: "Print" })).toBeVisible();
     await expect(page.locator(".order-pane")).toContainText("No items added yet");
+    await expect(sandwichCard.locator(".menu-card-count")).toBeHidden();
   });
 
   test("opens the variant chooser before adding a variant item", async ({ page }) => {
     await page.goto("/");
 
     await page.locator(".category-tabs").getByRole("button", { name: "Roll", exact: true }).click();
-    const rollCard = page.locator("article.menu-card").filter({
+    const rollCard = page.locator(".menu-card").filter({
       has: page.getByRole("heading", { name: "Egg Roll", exact: true }),
     });
     await expect(rollCard).toContainText("2 variants");
-    await rollCard.getByRole("button", { name: /Choose Egg Roll variant/ }).click();
+    await rollCard.click();
 
     const variantModal = page.getByRole("dialog", { name: "Egg Roll", exact: true });
     await expect(variantModal).toBeVisible();
@@ -42,6 +44,7 @@ test.describe("POS browser flows", () => {
     await expect(page.locator(".order-pane")).toContainText("Egg Roll");
     await expect(page.locator(".order-pane")).toContainText("Cheese");
     await expect(page.locator(".order-pane")).toContainText("₹80");
+    await expect(rollCard.locator(".menu-card-count")).toHaveText("1");
   });
 });
 
@@ -77,8 +80,34 @@ test.describe("Admin browser flows", () => {
     await expect(page.locator("input[name='name'][value='Playwright Paneer']")).toBeVisible();
     await page.getByLabel("Search").fill("Playwright Paneer");
     await expect(page.locator("[data-admin-menu-row]:visible")).toHaveCount(1);
-    await expect(page.locator("[data-admin-menu-row]:visible input[name='name']")).toHaveValue("Playwright Paneer");
+    let row = page.locator("[data-admin-menu-row]:visible");
+    await expect(row.locator("input[name='name']")).toHaveValue("Playwright Paneer");
+    await row.locator("input[name='best_seller']").check();
+    await Promise.all([
+      page.waitForResponse((response) => response.url().includes("/admin/items/update") && response.status() === 303),
+      row.getByRole("button", { name: "Save Playwright Paneer" }).click(),
+    ]);
 
+    await page.goto("/");
+    await page.locator(".category-tabs").getByRole("button", { name: "Best Sellers", exact: true }).click();
+    await expect(page.locator(".menu-card").filter({ hasText: "Playwright Paneer" })).toBeVisible();
+
+    await page.goto("/admin");
+    await page.getByLabel("Search").fill("Playwright Paneer");
+    row = page.locator("[data-admin-menu-row]:visible");
+    await row.locator("input[name='available']").uncheck();
+    await Promise.all([
+      page.waitForResponse((response) => response.url().includes("/admin/items/update") && response.status() === 303),
+      row.getByRole("button", { name: "Save Playwright Paneer" }).click(),
+    ]);
+
+    await page.goto("/");
+    await page.locator(".category-tabs").getByRole("button", { name: "Best Sellers", exact: true }).click();
+    const disabledPaneerCard = page.locator(".menu-card").filter({ hasText: "Playwright Paneer" });
+    await expect(disabledPaneerCard).toContainText("Unavailable");
+    await expect(disabledPaneerCard).toBeDisabled();
+
+    await page.goto("/admin");
     await page.getByRole("button", { name: "Past Invoices" }).click();
     await expect(page.locator("#admin-invoices-modal")).toBeVisible();
 

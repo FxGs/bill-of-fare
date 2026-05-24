@@ -62,6 +62,9 @@
   </section>
 </dialog>
 {{end}}
+<script>
+  window.syncMenuCardCounts?.({{.MenuCountsJSON}});
+</script>
 {{end}}
 
 {{define "invoice-created"}}
