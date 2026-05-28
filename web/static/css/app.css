@@ -1,6 +1,8 @@
 /* Bill of Fare stylesheet entrypoint. Keep imports in cascade order. */
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&family=Roboto+Slab:wght@500;600;700;800&display=swap");
 @import url("./base.css");
 @import url("./pos.css");
+@import url("./sales.css");
 @import url("./admin.css");
 @import url("./invoice.css");
 @import url("./responsive.css");

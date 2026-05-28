@@ -1,0 +1,203 @@
+/* Sales page metrics and invoice history. */
+
+.sales-shell {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+}
+
+.sales-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.sales-page-header h2 {
+  margin: 0;
+  color: #fff6e4;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.sales-page-header p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.sales-export-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid #4b3922;
+  border-radius: 6px;
+  background: #241d12;
+  color: var(--accent-2);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.sales-export-button:hover,
+.sales-export-button:focus {
+  background: var(--accent);
+  color: #1b1309;
+}
+
+.sales-page-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sales-page-metric {
+  min-height: 110px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+}
+
+.sales-page-metric span,
+.sales-page-metric small {
+  display: block;
+  color: var(--muted);
+  font-family: var(--font-sans);
+}
+
+.sales-page-metric span {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sales-page-metric strong {
+  display: block;
+  margin-top: 14px;
+  color: #fff6e4;
+  font-family: var(--font-mono);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.sales-page-metric small {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.sales-page-metric-compact {
+  min-height: 86px;
+  padding: 18px 22px;
+}
+
+.sales-page-metric-compact strong {
+  font-size: 24px;
+}
+
+.sales-history-section {
+  margin-top: 28px;
+}
+
+.sales-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sales-history-heading h3 {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sales-history-heading span {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+}
+
+.sales-history-panel {
+  min-height: 170px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #15130e;
+}
+
+.sales-history-head,
+.sales-history-row {
+  display: grid;
+  grid-template-columns: 88px minmax(160px, 1fr) 80px 110px 80px;
+  gap: 10px;
+  align-items: center;
+}
+
+.sales-history-head {
+  padding: 0 10px 10px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sales-history-row {
+  min-height: 46px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.sales-history-row + .sales-history-row {
+  margin-top: 8px;
+}
+
+.sales-history-row strong {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.sales-history-row button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 30px;
+  border: 0;
+  border-radius: 5px;
+  background: #2a2418;
+  color: var(--accent-2);
+  font-weight: 800;
+}
+
+.sales-history-row button:hover,
+.sales-history-row button:focus {
+  background: var(--accent);
+  color: #1b1309;
+}
+
+.sales-empty-history {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+}

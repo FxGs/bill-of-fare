@@ -66,6 +66,18 @@ func assertContains(t *testing.T, body string, wants ...string) {
 	}
 }
 
+func assertBefore(t *testing.T, body, first, second string) {
+	t.Helper()
+	firstIndex := strings.Index(body, first)
+	secondIndex := strings.Index(body, second)
+	if firstIndex == -1 || secondIndex == -1 {
+		t.Fatalf("body missing ordered values %q or %q:\n%s", first, second, body)
+	}
+	if firstIndex > secondIndex {
+		t.Fatalf("expected %q before %q:\n%s", first, second, body)
+	}
+}
+
 func TestIndexAndMenuPaneRenderGroupedVariants(t *testing.T) {
 	h := newTestHandler(t)
 	if err := h.Menu.CreateCategory("Biryani"); err != nil {
@@ -94,7 +106,8 @@ func TestIndexAndMenuPaneRenderGroupedVariants(t *testing.T) {
 	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
 	assertStatus(t, rec, http.StatusOK)
 	body := rec.Body.String()
-	assertContains(t, body, "Bill of Fare", "POS vtest", "Chicken Biryani", "2 variants", "₹160 - ₹260", "Chicken Chilli", "Create Order")
+	assertContains(t, body, "Bill of Fare", "POS vtest", "Chicken Biryani", "Half / Full", "from ₹160", "Chicken Chilli", "Create Order")
+	assertBefore(t, body, "<span>Half</span>", "<span>Full</span>")
 
 	rec = httptest.NewRecorder()
 	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/menu?category_id="+strconv.Itoa(biryaniID), nil))
@@ -119,11 +132,25 @@ func TestCartRoutesMutateSessionCart(t *testing.T) {
 	sessionCookie := &http.Cookie{Name: "session_id", Value: "cart-session"}
 
 	rec := httptest.NewRecorder()
-	req := formRequest(http.MethodPost, "/cart/add", url.Values{"item_id": {strconv.Itoa(items[0].ID)}})
+	req := formRequest(http.MethodPost, "/cart/toggle", url.Values{"item_id": {strconv.Itoa(items[0].ID)}})
 	req.AddCookie(sessionCookie)
 	h.Routes().ServeHTTP(rec, req)
 	assertStatus(t, rec, http.StatusOK)
 	assertContains(t, rec.Body.String(), "Paneer Tikka", "5pc", "₹180", "Create Order")
+
+	rec = httptest.NewRecorder()
+	req = formRequest(http.MethodPost, "/cart/toggle", url.Values{"item_id": {strconv.Itoa(items[0].ID)}})
+	req.AddCookie(sessionCookie)
+	h.Routes().ServeHTTP(rec, req)
+	assertStatus(t, rec, http.StatusOK)
+	assertContains(t, rec.Body.String(), "No items added yet", "disabled")
+
+	rec = httptest.NewRecorder()
+	req = formRequest(http.MethodPost, "/cart/toggle", url.Values{"item_id": {strconv.Itoa(items[0].ID)}})
+	req.AddCookie(sessionCookie)
+	h.Routes().ServeHTTP(rec, req)
+	assertStatus(t, rec, http.StatusOK)
+	assertContains(t, rec.Body.String(), "Paneer Tikka", "5pc", "₹180", "Clear")
 
 	rec = httptest.NewRecorder()
 	req = formRequest(http.MethodPost, "/cart/qty", url.Values{"key": {"1"}, "delta": {"1"}})
@@ -138,9 +165,22 @@ func TestCartRoutesMutateSessionCart(t *testing.T) {
 	h.Routes().ServeHTTP(rec, req)
 	assertStatus(t, rec, http.StatusOK)
 	assertContains(t, rec.Body.String(), "No items added yet", "disabled")
+
+	rec = httptest.NewRecorder()
+	req = formRequest(http.MethodPost, "/cart/toggle", url.Values{"item_id": {strconv.Itoa(items[0].ID)}})
+	req.AddCookie(sessionCookie)
+	h.Routes().ServeHTTP(rec, req)
+	assertStatus(t, rec, http.StatusOK)
+
+	rec = httptest.NewRecorder()
+	req = formRequest(http.MethodPost, "/cart/clear", nil)
+	req.AddCookie(sessionCookie)
+	h.Routes().ServeHTTP(rec, req)
+	assertStatus(t, rec, http.StatusOK)
+	assertContains(t, rec.Body.String(), "No items added yet", "disabled")
 }
 
-func TestSalesSummaryRendersCurrentSessionAndToday(t *testing.T) {
+func TestSalesPageRendersCurrentSessionTodayAndHistory(t *testing.T) {
 	h := newTestHandler(t)
 	session := "sales-session"
 	h.Cart.Add(session, models.MenuItem{ID: 3, Name: "Soup", Price: 80})
@@ -156,7 +196,7 @@ func TestSalesSummaryRendersCurrentSessionAndToday(t *testing.T) {
 	req.AddCookie(&http.Cookie{Name: "session_id", Value: session})
 	h.Routes().ServeHTTP(rec, req)
 	assertStatus(t, rec, http.StatusOK)
-	assertContains(t, rec.Body.String(), "Sales", "Today", "₹150", "This Session", "₹120", "Current Open Order", "₹80")
+	assertContains(t, rec.Body.String(), "Sales - This Session", "Today", "₹150", "Revenue", "₹120", "Open Order", "₹80", "Invoice History", "#1")
 }
 
 func TestAdminPageAndAdminMutationRoutes(t *testing.T) {
@@ -173,7 +213,10 @@ func TestAdminPageAndAdminMutationRoutes(t *testing.T) {
 	rec := httptest.NewRecorder()
 	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/admin", nil))
 	assertStatus(t, rec, http.StatusOK)
-	assertContains(t, rec.Body.String(), "Menu Admin", "Manage Categories", "Past Invoices", "Receipt Settings", "Soup")
+	assertContains(t, rec.Body.String(), "Menu Admin", "Manage Categories", "Receipt Settings", "Soup")
+	if strings.Contains(rec.Body.String(), "Past Invoices") {
+		t.Fatalf("admin should not render past invoices action:\n%s", rec.Body.String())
+	}
 
 	rec = httptest.NewRecorder()
 	req := formRequest(http.MethodPost, "/admin/categories/create", url.Values{"name": {"Dessert"}})
@@ -312,7 +355,7 @@ func TestAdminSettingsAndInvoiceExportRoutes(t *testing.T) {
 	assertContains(t, rec.Body.String(), "restaurant name is required")
 
 	rec = httptest.NewRecorder()
-	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/admin/invoices/export", nil))
+	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/sales/invoices/export", nil))
 	assertStatus(t, rec, http.StatusOK)
 	if got := rec.Header().Get("Content-Type"); got != "text/csv" {
 		t.Fatalf("Content-Type = %q, want text/csv", got)
@@ -321,7 +364,7 @@ func TestAdminSettingsAndInvoiceExportRoutes(t *testing.T) {
 	assertContains(t, rec.Body.String(), "invoice_id,created_at,item_name,quantity,unit_price,subtotal,invoice_total", "Coffee,2,50,100,100")
 }
 
-func TestCreateInvoiceNonHTMXAndViewInvoiceErrors(t *testing.T) {
+func TestCreateInvoiceNonHTMXRedirectsToPOSPreview(t *testing.T) {
 	h := newTestHandler(t)
 
 	rec := httptest.NewRecorder()
@@ -340,14 +383,13 @@ func TestCreateInvoiceNonHTMXAndViewInvoiceErrors(t *testing.T) {
 	req.AddCookie(&http.Cookie{Name: "session_id", Value: session})
 	h.Routes().ServeHTTP(rec, req)
 	assertStatus(t, rec, http.StatusSeeOther)
-	if got := rec.Header().Get("Location"); got != "/invoice?id=1&print=1" {
-		t.Fatalf("invoice redirect = %q, want /invoice?id=1&print=1", got)
+	if got := rec.Header().Get("Location"); got != "/?invoice_id=1" {
+		t.Fatalf("invoice redirect = %q, want /?invoice_id=1", got)
 	}
 
 	rec = httptest.NewRecorder()
 	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/invoice?id=404", nil))
 	assertStatus(t, rec, http.StatusNotFound)
-	assertContains(t, rec.Body.String(), "invoice not found")
 }
 
 func TestAdminItemMutationValidationErrors(t *testing.T) {
@@ -435,7 +477,7 @@ func TestCreateInvoiceHTMXWithEmptyCartReturnsNoContent(t *testing.T) {
 	}
 }
 
-func TestViewInvoiceRendersRestaurantNameAndPrintScript(t *testing.T) {
+func TestInvoicePreviewFragmentRendersReceiptModal(t *testing.T) {
 	h := newTestHandler(t)
 	if err := h.Settings.UpdateRestaurantName("Cafe Example"); err != nil {
 		t.Fatalf("UpdateRestaurantName: %v", err)
@@ -447,7 +489,7 @@ func TestViewInvoiceRendersRestaurantNameAndPrintScript(t *testing.T) {
 		t.Fatalf("Create invoice: %v", err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "/invoice?id=1&print=1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/sales/invoices/preview?id=1", nil)
 	rec := httptest.NewRecorder()
 	h.Routes().ServeHTTP(rec, req)
 
@@ -455,12 +497,39 @@ func TestViewInvoiceRendersRestaurantNameAndPrintScript(t *testing.T) {
 		t.Fatalf("status = %d, want 200", rec.Code)
 	}
 	body := rec.Body.String()
-	for _, want := range []string{"Cafe Example", "Order #1", "Soup", "window.print()"} {
+	for _, want := range []string{"Invoice Preview", "Cafe Example", "Order #1", "Soup", "printInvoicePreview", "showModal()"} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("body missing %q:\n%s", want, body)
 		}
 	}
+	if strings.Contains(body, "<!doctype html>") {
+		t.Fatalf("preview endpoint should render a fragment, got full page:\n%s", body)
+	}
 	if id != 1 {
 		t.Fatalf("invoice id = %d, want 1", id)
 	}
+
+	rec = httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/sales/invoices/preview?id=404", nil))
+	assertStatus(t, rec, http.StatusNotFound)
+	assertContains(t, rec.Body.String(), "invoice not found")
+}
+
+func TestIndexWithInvoiceIDReopensInvoicePreview(t *testing.T) {
+	h := newTestHandler(t)
+	id, err := h.Invoices.Create([]models.CartItem{
+		{MenuItem: models.MenuItem{ID: 1, Name: "Soup", Price: 80}, Quantity: 1, Subtotal: 80},
+	}, 80)
+	if err != nil {
+		t.Fatalf("Create invoice: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/?invoice_id="+strconv.Itoa(id), nil)
+	rec := httptest.NewRecorder()
+	h.Routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	assertContains(t, rec.Body.String(), "Invoice Preview", "Order #1", "Soup", "showModal()", "history.replaceState")
 }

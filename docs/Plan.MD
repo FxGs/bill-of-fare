@@ -280,8 +280,7 @@ layout.html
 index.html
 menu.html
 cart.html
-invoice.html
-invoice_print.html
+invoice preview modal partial
 ```
 
 Use:

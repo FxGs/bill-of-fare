@@ -1,4 +1,5 @@
 *.db
+.DS_Store
 dist/
 node_modules/
 playwright-report/

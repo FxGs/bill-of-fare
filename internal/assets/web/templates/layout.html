@@ -10,40 +10,18 @@
   <link href="/static/css/app.css" rel="stylesheet">
 </head>
 <body class="pos-screen">
-  <header class="pos-topbar">
-    <div class="brand-lockup">
-      <div class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M7 10.5c-1.7-.4-3-1.7-3-3.4C4 5.2 5.6 3.8 7.5 4c.7-1.6 2.2-2.6 4-2.6s3.4 1 4 2.6c1.9-.2 3.5 1.2 3.5 3.1 0 1.7-1.3 3-3 3.4"></path>
-          <path d="M7 10.5h10l-.7 9.5H7.7z"></path>
-          <path d="M8.5 14h7"></path>
-        </svg>
-      </div>
-      <div>
-        <h1>Bill of Fare</h1>
-        <span>POS v{{.AppVersion}}</span>
-      </div>
-    </div>
-    <div class="topbar-actions">
-      <time class="topbar-clock" id="topbar-clock" datetime="">--:--</time>
-      <a class="topbar-link" href="/admin">Admin</a>
-      <button class="sales-button" onclick="document.getElementById('sales-modal').showModal()" hx-get="/sales" hx-target="#sales-modal-content" hx-swap="innerHTML">Sales</button>
-      <div class="service-chip">Dine-in</div>
-    </div>
-  </header>
+  {{template "app-header" .}}
 
   <main class="pos-layout">
     {{template "menu-pane" .}}
 
     <aside class="order-pane">
+      <button class="order-resize-handle" type="button" aria-label="Resize order sidebar" aria-orientation="vertical"></button>
       <div id="cart">{{template "cart" .}}</div>
     </aside>
   </main>
 
-  <div id="invoice-preview-host"></div>
-  <dialog class="sales-modal" id="sales-modal">
-    <div id="sales-modal-content"></div>
-  </dialog>
+  <div id="invoice-preview-host">{{if .AutoOpenInvoicePreview}}{{template "invoice-preview-dialog" .}}{{end}}</div>
   <script>
     function syncMenuCardCounts(counts = {}) {
       document.querySelectorAll("[data-menu-card-count]").forEach((badge) => {
@@ -57,16 +35,59 @@
     }
 
     (() => {
-      const clock = document.getElementById("topbar-clock");
-      const updateClock = () => {
-        const now = new Date();
-        clock.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        clock.setAttribute("datetime", now.toISOString());
+      const layout = document.querySelector(".pos-layout");
+      const handle = document.querySelector(".order-resize-handle");
+      if (!layout || !handle) return;
+
+      const storageKey = "bill-of-fare.orderPaneWidth";
+      const minWidth = 280;
+      const maxWidth = 560;
+      const clampWidth = (width) => Math.min(maxWidth, Math.max(minWidth, width));
+      const setWidth = (width) => {
+        const next = clampWidth(width);
+        layout.style.setProperty("--order-pane-width", `${next}px`);
+        localStorage.setItem(storageKey, String(next));
       };
-      updateClock();
-      setInterval(updateClock, 30000);
+
+      const savedWidth = Number(localStorage.getItem(storageKey));
+      if (Number.isFinite(savedWidth) && savedWidth > 0) {
+        setWidth(savedWidth);
+      }
+
+      handle.addEventListener("pointerdown", (event) => {
+        if (window.matchMedia("(max-width: 860px)").matches) return;
+        event.preventDefault();
+        handle.setPointerCapture(event.pointerId);
+        document.body.classList.add("resizing-order-pane");
+      });
+
+      handle.addEventListener("pointermove", (event) => {
+        if (!handle.hasPointerCapture(event.pointerId)) return;
+        setWidth(window.innerWidth - event.clientX);
+      });
+
+      const stopResize = (event) => {
+        if (handle.hasPointerCapture(event.pointerId)) {
+          handle.releasePointerCapture(event.pointerId);
+        }
+        document.body.classList.remove("resizing-order-pane");
+      };
+      handle.addEventListener("pointerup", stopResize);
+      handle.addEventListener("pointercancel", stopResize);
+    })();
+
+    (() => {
+      const modal = document.getElementById("invoice-preview-modal");
+      if (!modal) return;
+      requestAnimationFrame(() => {
+        modal.showModal();
+        if (window.location.search.includes("invoice_id=")) {
+          history.replaceState(null, "", "/");
+        }
+      });
     })();
   </script>
+  {{template "clock-script" .}}
 </body>
 </html>
 {{end}}
@@ -92,13 +113,15 @@
     {{else if .HasChoices}}
     <button class="menu-card menu-card-action {{if gt .SelectedCount 0}}selected{{end}}" type="button" onclick="document.getElementById('variant-modal-{{.ID}}').showModal()" aria-label="Choose {{.Name}} variant" data-menu-card-id="{{.CountKey}}">
     {{else}}
-    <button class="menu-card menu-card-action {{if gt .SelectedCount 0}}selected{{end}}" type="button" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" aria-label="Add {{.Name}}" data-menu-card-id="{{.CountKey}}">
+    <button class="menu-card menu-card-action {{if gt .SelectedCount 0}}selected{{end}}" type="button" hx-post="/cart/toggle" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" aria-label="Select {{.Name}}" data-menu-card-id="{{.CountKey}}">
     {{end}}
       <span class="menu-card-count" data-menu-card-count="{{.CountKey}}" {{if eq .SelectedCount 0}}hidden{{end}}>{{.SelectedCount}}</span>
+      {{if .BestSeller}}<span class="menu-card-star" aria-label="Best seller">★</span>{{end}}
+      {{if not .Available}}<span class="menu-card-closed">Closed</span>{{end}}
       <div>
         <p class="menu-card-category">{{.CategoryName}}</p>
         <h2>{{.Name}}</h2>
-        {{if not .Available}}<p class="menu-card-detail">Unavailable</p>{{else if .HasChoices}}<p class="menu-card-detail">{{len .Variants}} variants</p>{{else}}{{range .Variants}}{{if .Variant}}<p class="menu-card-detail">{{.Variant}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}{{end}}{{end}}
+        {{if not .Available}}<p class="menu-card-detail">Unavailable</p>{{else if .VariantLabel}}<p class="menu-card-detail">{{.VariantLabel}}</p>{{else}}<p class="menu-card-detail menu-card-detail-empty" aria-hidden="true"></p>{{end}}
       </div>
       <div class="menu-card-footer">
         <strong>{{.PriceLabel}}</strong>
@@ -119,7 +142,7 @@
         <div class="variant-list">
           {{range .Variants}}
           {{if .Available}}
-          <button class="variant-choice" hx-post="/cart/add" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" onclick="this.closest('dialog').close()" aria-label="Add {{.Name}} {{.Variant}}">
+          <button class="variant-choice" hx-post="/cart/toggle" hx-vals='{"item_id":"{{.ID}}"}' hx-target="#cart" hx-swap="innerHTML" onclick="this.closest('dialog').close()" aria-label="Select {{.Name}} {{.Variant}}">
             <span>{{if .Variant}}{{.Variant}}{{else}}Regular{{end}}</span>
             <strong>₹{{.Price}}</strong>
           </button>
@@ -137,37 +160,6 @@
     {{end}}
     </div>
     {{end}}
-  </div>
-</section>
-{{end}}
-
-{{define "sales-summary"}}
-<section class="sales-card">
-  <div class="sales-header">
-    <div>
-      <p>Sales</p>
-      <span>Today and this session</span>
-    </div>
-    <form method="dialog">
-      <button class="modal-close" aria-label="Close">×</button>
-    </form>
-  </div>
-  <div class="sales-grid">
-    <div class="sales-metric">
-      <span>Today</span>
-      <strong>₹{{.TodaySales.Total}}</strong>
-      <small>{{.TodaySales.Count}} invoices</small>
-    </div>
-    <div class="sales-metric">
-      <span>This Session</span>
-      <strong>₹{{.SessionSales.Total}}</strong>
-      <small>{{.SessionSales.Count}} invoices</small>
-    </div>
-    <div class="sales-metric sales-metric-wide">
-      <span>Current Open Order</span>
-      <strong>₹{{.CurrentTotal}}</strong>
-      <small>Not counted until invoice is printed</small>
-    </div>
   </div>
 </section>
 {{end}}

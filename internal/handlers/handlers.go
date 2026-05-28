@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"bill-of-fare/internal/models"
@@ -35,8 +37,10 @@ type menuDisplayItem struct {
 	Name          string
 	Variants      []models.MenuItem
 	PriceLabel    string
+	VariantLabel  string
 	HasChoices    bool
 	Available     bool
+	BestSeller    bool
 	SelectedCount int
 	CountKey      string
 }
@@ -53,25 +57,38 @@ func (h Handler) Routes() http.Handler {
 	mux.HandleFunc("/", h.index)
 	mux.HandleFunc("/menu", h.menuPane)
 	mux.HandleFunc("/cart/add", h.addToCart)
+	mux.HandleFunc("/cart/toggle", h.toggleCart)
 	mux.HandleFunc("/cart/qty", h.changeQty)
 	mux.HandleFunc("/cart/remove", h.remove)
+	mux.HandleFunc("/cart/clear", h.clearCart)
 	mux.HandleFunc("/cart", h.cartFragment)
-	mux.HandleFunc("/sales", h.salesSummary)
+	mux.HandleFunc("/sales", h.sales)
+	mux.HandleFunc("/sales/invoices/export", h.exportInvoices)
+	mux.HandleFunc("/sales/invoices/preview", h.invoicePreview)
 	mux.HandleFunc("/admin", h.admin)
 	mux.HandleFunc("/admin/categories/create", h.adminCreateCategory)
 	mux.HandleFunc("/admin/categories/delete", h.adminDeleteCategory)
 	mux.HandleFunc("/admin/items/create", h.adminCreateItem)
 	mux.HandleFunc("/admin/items/update", h.adminUpdateItem)
 	mux.HandleFunc("/admin/items/delete", h.adminDeleteItem)
-	mux.HandleFunc("/admin/invoices/export", h.adminExportInvoices)
+	mux.HandleFunc("/admin/invoices/export", h.exportInvoices)
 	mux.HandleFunc("/admin/settings/restaurant-name", h.adminUpdateRestaurantName)
 	mux.HandleFunc("/invoice/create", h.createInvoice)
-	mux.HandleFunc("/invoice", h.viewInvoice)
 	return mux
 }
 
 func (h Handler) index(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
 	data := h.pageData(w, r, 0)
+	if invoiceID := atoi(r.URL.Query().Get("invoice_id")); invoiceID > 0 {
+		if inv, err := h.Invoices.Get(invoiceID); err == nil {
+			data["Invoice"] = inv
+			data["AutoOpenInvoicePreview"] = true
+		}
+	}
 	_ = h.Tpl.ExecuteTemplate(w, "layout", data)
 }
 
@@ -88,6 +105,14 @@ func (h Handler) addToCart(w http.ResponseWriter, r *http.Request) {
 	}
 	h.cartFragment(w, r)
 }
+func (h Handler) toggleCart(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	id, _ := strconv.Atoi(r.FormValue("item_id"))
+	if it, err := h.Menu.GetMenuItem(id); err == nil {
+		h.Cart.Toggle(h.Cart.SessionID(w, r), it)
+	}
+	h.cartFragment(w, r)
+}
 func (h Handler) changeQty(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
 	h.Cart.ChangeQty(h.Cart.SessionID(w, r), r.FormValue("key"), atoi(r.FormValue("delta")))
@@ -98,23 +123,41 @@ func (h Handler) remove(w http.ResponseWriter, r *http.Request) {
 	h.Cart.Remove(h.Cart.SessionID(w, r), r.FormValue("key"))
 	h.cartFragment(w, r)
 }
+func (h Handler) clearCart(w http.ResponseWriter, r *http.Request) {
+	h.Cart.Clear(h.Cart.SessionID(w, r))
+	h.cartFragment(w, r)
+}
 func (h Handler) cartFragment(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	orderNumber, _ := h.Invoices.NextNumber()
 	_ = h.Tpl.ExecuteTemplate(w, "cart", h.cartData(items, total, orderNumber))
 }
-func (h Handler) salesSummary(w http.ResponseWriter, r *http.Request) {
+func (h Handler) sales(w http.ResponseWriter, r *http.Request) {
 	s := h.Cart.SessionID(w, r)
 	_, currentTotal := h.Cart.Snapshot(s)
 	today, _ := h.Invoices.TodaySales()
-	_ = h.Tpl.ExecuteTemplate(w, "sales-summary", map[string]any{"TodaySales": today, "SessionSales": h.Cart.SessionSales(s), "CurrentTotal": currentTotal})
+	sessionSales := h.Cart.SessionSales(s)
+	invoices, _ := h.Invoices.List(100)
+	average := 0
+	if sessionSales.Count > 0 {
+		average = sessionSales.Total / sessionSales.Count
+	}
+	_ = h.Tpl.ExecuteTemplate(w, "sales", map[string]any{
+		"ActivePage":        "sales",
+		"AppVersion":        h.appVersion(),
+		"AverageOrderValue": average,
+		"CurrentTotal":      currentTotal,
+		"Invoices":          invoices,
+		"RestaurantName":    h.Settings.RestaurantName(),
+		"SessionSales":      sessionSales,
+		"TodaySales":        today,
+	})
 }
 func (h Handler) admin(w http.ResponseWriter, r *http.Request) {
 	cats, _ := h.Menu.ListCategories()
 	items, _ := h.Menu.ListMenuItems()
-	invoices, _ := h.Invoices.List(100)
-	_ = h.Tpl.ExecuteTemplate(w, "admin", map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "Items": items, "Invoices": invoices, "RestaurantName": h.Settings.RestaurantName()})
+	_ = h.Tpl.ExecuteTemplate(w, "admin", map[string]any{"ActivePage": "admin", "AppVersion": h.appVersion(), "Categories": cats, "Items": items, "RestaurantName": h.Settings.RestaurantName()})
 }
 func (h Handler) adminCreateCategory(w http.ResponseWriter, r *http.Request) {
 	_ = r.ParseForm()
@@ -166,7 +209,7 @@ func (h Handler) adminDeleteItem(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
-func (h Handler) adminExportInvoices(w http.ResponseWriter, r *http.Request) {
+func (h Handler) exportInvoices(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.Invoices.ExportRows()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -230,16 +273,17 @@ func (h Handler) createInvoice(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	http.Redirect(w, r, "/invoice?id="+strconv.Itoa(id)+"&print=1", http.StatusSeeOther)
+	http.Redirect(w, r, "/?invoice_id="+strconv.Itoa(id), http.StatusSeeOther)
 }
-func (h Handler) viewInvoice(w http.ResponseWriter, r *http.Request) {
+
+func (h Handler) invoicePreview(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.Atoi(r.URL.Query().Get("id"))
 	inv, err := h.Invoices.Get(id)
 	if err != nil {
 		http.Error(w, "invoice not found", 404)
 		return
 	}
-	_ = h.Tpl.ExecuteTemplate(w, "invoice", map[string]any{"Invoice": inv, "RestaurantName": h.Settings.RestaurantName(), "AutoPrint": r.URL.Query().Get("print") == "1"})
+	_ = h.Tpl.ExecuteTemplate(w, "invoice-preview-fragment", map[string]any{"Invoice": inv, "RestaurantName": h.Settings.RestaurantName()})
 }
 func atoi(s string) int { i, _ := strconv.Atoi(s); return i }
 
@@ -273,8 +317,9 @@ func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int
 	s := h.Cart.SessionID(w, r)
 	items, total := h.Cart.Snapshot(s)
 	selectedCounts := menuSelectedCounts(items)
+	itemCount := menuItemCount(items)
 	orderNumber, _ := h.Invoices.NextNumber()
-	return map[string]any{"AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID, selectedCounts), "SelectedCategoryID": selectedID, "CartItems": items, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()}
+	return map[string]any{"ActivePage": "pos", "AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID, selectedCounts), "SelectedCategoryID": selectedID, "CartItems": items, "ItemCount": itemCount, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()}
 }
 
 func (h Handler) cartData(items []models.CartItem, total, orderNumber int) map[string]any {
@@ -282,12 +327,21 @@ func (h Handler) cartData(items []models.CartItem, total, orderNumber int) map[s
 	countsJSON, _ := json.Marshal(counts)
 	return map[string]any{
 		"CartItems":      items,
+		"ItemCount":      menuItemCount(items),
 		"Total":          total,
 		"OrderNumber":    orderNumber,
 		"PreviewTime":    time.Now(),
 		"RestaurantName": h.Settings.RestaurantName(),
 		"MenuCountsJSON": template.JS(countsJSON),
 	}
+}
+
+func menuItemCount(items []models.CartItem) int {
+	count := 0
+	for _, item := range items {
+		count += item.Quantity
+	}
+	return count
 }
 
 func (h Handler) appVersion() string {
@@ -316,15 +370,30 @@ func groupMenuCategories(cats []models.Category, colorByCategoryID map[int]strin
 			displayCat.Items[idx].Variants = append(displayCat.Items[idx].Variants, item)
 		}
 		for i := range displayCat.Items {
+			sortMenuVariants(displayCat.Items[i].Variants)
 			displayCat.Items[i].HasChoices = len(displayCat.Items[i].Variants) > 1
 			displayCat.Items[i].Available = menuItemAvailable(displayCat.Items[i].Variants)
+			displayCat.Items[i].BestSeller = menuItemBestSeller(displayCat.Items[i].Variants)
 			displayCat.Items[i].PriceLabel = menuPriceLabel(displayCat.Items[i].Variants)
+			displayCat.Items[i].VariantLabel = menuVariantLabel(displayCat.Items[i].Variants)
 			displayCat.Items[i].CountKey = menuCountKey(displayCat.Items[i].Variants[0].CategoryID, displayCat.Items[i].Name)
 			displayCat.Items[i].SelectedCount = selectedCounts[displayCat.Items[i].CountKey]
 		}
 		groupedCats = append(groupedCats, displayCat)
 	}
 	return groupedCats
+}
+
+func sortMenuVariants(items []models.MenuItem) {
+	sort.SliceStable(items, func(i, j int) bool {
+		if items[i].Price != items[j].Price {
+			return items[i].Price < items[j].Price
+		}
+		if items[i].Variant != items[j].Variant {
+			return items[i].Variant < items[j].Variant
+		}
+		return items[i].ID < items[j].ID
+	})
 }
 
 func bestSellerPreset(cats []models.Category) []models.Category {
@@ -341,6 +410,15 @@ func bestSellerPreset(cats []models.Category) []models.Category {
 func menuItemAvailable(items []models.MenuItem) bool {
 	for _, item := range items {
 		if item.Available {
+			return true
+		}
+	}
+	return false
+}
+
+func menuItemBestSeller(items []models.MenuItem) bool {
+	for _, item := range items {
+		if item.BestSeller {
 			return true
 		}
 	}
@@ -377,8 +455,26 @@ func menuPriceLabel(items []models.MenuItem) string {
 			max = item.Price
 		}
 	}
+	if len(items) > 1 {
+		return "from ₹" + strconv.Itoa(min)
+	}
 	if min == max {
 		return "₹" + strconv.Itoa(min)
 	}
-	return "₹" + strconv.Itoa(min) + " - ₹" + strconv.Itoa(max)
+	return "from ₹" + strconv.Itoa(min)
+}
+
+func menuVariantLabel(items []models.MenuItem) string {
+	if len(items) == 0 {
+		return ""
+	}
+	labels := make([]string, 0, len(items))
+	for _, item := range items {
+		if item.Variant == "" {
+			labels = append(labels, "Regular")
+			continue
+		}
+		labels = append(labels, item.Variant)
+	}
+	return strings.Join(labels, " / ")
 }

@@ -70,11 +70,13 @@ DB_PATH=/tmp/bill_of_fare.db MENU_PATH=seed/menu.yaml HOST=127.0.0.1 PORT=8080 .
 - `GET /` renders the POS.
 - `GET /menu?category_id=N` renders the menu fragment. `category_id=0` or empty shows all categories.
 - `POST /cart/add`, `/cart/qty`, `/cart/remove`, and `GET /cart` update/render the cart fragment.
-- `GET /sales` renders the sales summary modal.
-- `GET /admin/invoices/export` exports invoice line items as CSV.
+- `GET /sales` renders the sales page with metrics and invoice history.
+- `GET /sales/invoices/preview?id=N` renders an invoice preview modal fragment.
+- `GET /sales/invoices/export` exports invoice line items as CSV.
+- `GET /admin/invoices/export` remains as a compatibility export alias.
 - `POST /admin/settings/restaurant-name` updates the restaurant name printed on invoices.
-- `POST /invoice/create` creates an invoice, records session sales, clears the cart, and redirects to `/invoice?id=N`.
-- `GET /invoice?id=N` renders a printable invoice.
+- `POST /invoice/create` creates an invoice, records session sales, clears the cart, and returns the invoice preview modal for HTMX; non-HTMX redirects to `/?invoice_id=N`.
+- There is no standalone `/invoice` page; printing happens in-place from the invoice preview modal.
 - `GET /admin` renders menu admin.
 - `POST /admin/categories/create`, `/admin/categories/delete`, `/admin/items/create`, `/admin/items/update`, `/admin/items/delete` mutate menu data.
 
