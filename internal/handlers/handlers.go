@@ -49,6 +49,7 @@ type menuCategoryTab struct {
 	ID         int
 	Name       string
 	ColorClass string
+	ItemCount  int
 }
 
 func (h Handler) Routes() http.Handler {
@@ -296,12 +297,12 @@ func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int
 	if len(bestSellerCats) > 0 {
 		bestSellerColor := menuColorClass(0)
 		colorByCategoryID[services.BestSellersCategoryID] = bestSellerColor
-		categoryTabs = append(categoryTabs, menuCategoryTab{ID: services.BestSellersCategoryID, Name: "Best Sellers", ColorClass: bestSellerColor})
+		categoryTabs = append(categoryTabs, menuCategoryTab{ID: services.BestSellersCategoryID, Name: "Best Sellers", ColorClass: bestSellerColor, ItemCount: categoryItemCount(bestSellerPreset(bestSellerCats)[0])})
 	}
 	for i, c := range cats {
 		color := menuColorClass(i + 1)
 		colorByCategoryID[c.ID] = color
-		categoryTabs = append(categoryTabs, menuCategoryTab{ID: c.ID, Name: c.Name, ColorClass: color})
+		categoryTabs = append(categoryTabs, menuCategoryTab{ID: c.ID, Name: c.Name, ColorClass: color, ItemCount: categoryItemCount(c)})
 	}
 	if selectedID == services.BestSellersCategoryID {
 		menuCats = bestSellerPreset(bestSellerCats)
@@ -319,7 +320,7 @@ func (h Handler) pageData(w http.ResponseWriter, r *http.Request, selectedID int
 	selectedCounts := menuSelectedCounts(items)
 	itemCount := menuItemCount(items)
 	orderNumber, _ := h.Invoices.NextNumber()
-	return map[string]any{"ActivePage": "pos", "AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID, selectedCounts), "SelectedCategoryID": selectedID, "CartItems": items, "ItemCount": itemCount, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()}
+	return map[string]any{"ActivePage": "pos", "AppVersion": h.appVersion(), "Categories": cats, "CategoryTabs": categoryTabs, "MenuCategories": groupMenuCategories(menuCats, colorByCategoryID, selectedCounts), "SelectedCategoryID": selectedID, "TotalMenuItems": categoriesItemCount(cats), "CartItems": items, "ItemCount": itemCount, "Total": total, "OrderNumber": orderNumber, "PreviewTime": time.Now(), "RestaurantName": h.Settings.RestaurantName()}
 }
 
 func (h Handler) cartData(items []models.CartItem, total, orderNumber int) map[string]any {
@@ -382,6 +383,22 @@ func groupMenuCategories(cats []models.Category, colorByCategoryID map[int]strin
 		groupedCats = append(groupedCats, displayCat)
 	}
 	return groupedCats
+}
+
+func categoryItemCount(category models.Category) int {
+	seen := map[string]bool{}
+	for _, item := range category.Items {
+		seen[menuCountKey(item.CategoryID, item.Name)] = true
+	}
+	return len(seen)
+}
+
+func categoriesItemCount(categories []models.Category) int {
+	total := 0
+	for _, category := range categories {
+		total += categoryItemCount(category)
+	}
+	return total
 }
 
 func sortMenuVariants(items []models.MenuItem) {

@@ -95,9 +95,15 @@
 {{define "menu-pane"}}
 <section class="menu-pane">
   <nav class="category-tabs" aria-label="Menu categories">
-    <button class="category-tab category-color-1 {{if eq .SelectedCategoryID 0}}active{{end}}" hx-get="/menu" hx-target=".menu-pane" hx-swap="outerHTML">All</button>
+    <button class="category-tab category-color-1 {{if eq .SelectedCategoryID 0}}active{{end}}" hx-get="/menu" hx-target=".menu-pane" hx-swap="outerHTML">
+      <span>All</span>
+      <small aria-hidden="true">{{.TotalMenuItems}}</small>
+    </button>
     {{range .CategoryTabs}}
-    <button class="category-tab {{.ColorClass}} {{if eq $.SelectedCategoryID .ID}}active{{end}}" hx-get="/menu?category_id={{.ID}}" hx-target=".menu-pane" hx-swap="outerHTML">{{.Name}}</button>
+    <button class="category-tab {{.ColorClass}} {{if eq $.SelectedCategoryID .ID}}active{{end}}" hx-get="/menu?category_id={{.ID}}" hx-target=".menu-pane" hx-swap="outerHTML">
+      <span>{{.Name}}</span>
+      <small aria-hidden="true">{{.ItemCount}}</small>
+    </button>
     {{end}}
   </nav>
 
