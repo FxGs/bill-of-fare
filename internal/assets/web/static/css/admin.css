@@ -32,6 +32,7 @@
 .admin-section-header p {
   margin: 0;
   color: #fff6e4;
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 700;
 }
@@ -39,7 +40,7 @@
 .admin-section-header span,
 .admin-modal-form label {
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
 }
 
@@ -62,7 +63,7 @@
   display: grid;
   gap: 6px;
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
 }
 
@@ -74,7 +75,7 @@
   border-radius: 6px;
   background: #211d15;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   padding: 0 10px;
 }
@@ -125,7 +126,7 @@
   display: grid;
   gap: 6px;
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
 }
 
@@ -136,7 +137,7 @@
   border-radius: 6px;
   background: #211d15;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   padding: 0 10px;
 }
@@ -148,7 +149,7 @@
 .admin-category-count {
   padding: 10px 14px 8px;
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 700;
 }
@@ -169,7 +170,7 @@
   min-width: 0;
   overflow: hidden;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -213,7 +214,7 @@
   border-radius: 6px;
   background: #211d15;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
 }
 
@@ -235,7 +236,7 @@
   min-height: 38px;
   border: 0;
   border-radius: 6px;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 800;
 }
@@ -297,7 +298,7 @@
 
 .admin-table-head span {
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 800;
   text-align: left;
@@ -332,7 +333,7 @@
   border-radius: 6px;
   background: #211d15;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 800;
 }
@@ -414,7 +415,7 @@
   padding: 18px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
 }
 
@@ -464,7 +465,7 @@
 
 .admin-modal-header span {
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
 }
 
@@ -529,7 +530,7 @@
 .admin-invoice-head {
   padding: 0 0 10px;
   color: var(--muted);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
@@ -542,7 +543,7 @@
   border-radius: 6px;
   background: #211d15;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
 }
 
@@ -552,7 +553,7 @@
 
 .admin-invoice-row strong {
   color: var(--accent);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .admin-invoice-row a {

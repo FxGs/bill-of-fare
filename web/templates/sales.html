@@ -1,0 +1,84 @@
+{{define "sales"}}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sales · Bill of Fare</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <link href="/static/css/app.css" rel="stylesheet">
+</head>
+<body class="pos-screen">
+  {{template "app-header" .}}
+
+  <main class="sales-shell">
+    <section class="sales-page-header">
+      <div>
+        <h2>Sales - This Session</h2>
+        <p>Track the current counter session and review completed invoices.</p>
+      </div>
+      <a class="sales-export-button" href="/sales/invoices/export">Export CSV</a>
+    </section>
+
+    <section class="sales-page-grid" aria-label="Sales metrics">
+      <article class="sales-page-metric">
+        <span>Total Orders</span>
+        <strong>{{.SessionSales.Count}}</strong>
+      </article>
+      <article class="sales-page-metric">
+        <span>Revenue</span>
+        <strong>₹{{.SessionSales.Total}}</strong>
+      </article>
+      <article class="sales-page-metric">
+        <span>Avg. Order Value</span>
+        <strong>₹{{.AverageOrderValue}}</strong>
+      </article>
+      <article class="sales-page-metric sales-page-metric-compact">
+        <span>Today</span>
+        <strong>₹{{.TodaySales.Total}}</strong>
+        <small>{{.TodaySales.Count}} invoices</small>
+      </article>
+      <article class="sales-page-metric sales-page-metric-compact">
+        <span>Open Order</span>
+        <strong>₹{{.CurrentTotal}}</strong>
+        <small>Not counted yet</small>
+      </article>
+    </section>
+
+    <section class="sales-history-section">
+      <div class="sales-history-heading">
+        <h3>Invoice History</h3>
+        <span>{{len .Invoices}} recent invoices</span>
+      </div>
+
+      <div class="sales-history-panel">
+        {{if .Invoices}}
+        <div class="sales-history-head">
+          <span>Invoice</span>
+          <span>Date</span>
+          <span>Items</span>
+          <span>Total</span>
+          <span>View</span>
+        </div>
+        {{range .Invoices}}
+        <div class="sales-history-row">
+          <span>#{{.ID}}</span>
+          <span>{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
+          <span>{{.ItemCount}}</span>
+          <strong>₹{{.Total}}</strong>
+          <button type="button" hx-get="/sales/invoices/preview?id={{.ID}}" hx-target="#invoice-preview-host" hx-swap="innerHTML">View</button>
+        </div>
+        {{end}}
+        {{else}}
+        <div class="sales-empty-history">No invoices yet.</div>
+        {{end}}
+      </div>
+    </section>
+  </main>
+
+  <div id="invoice-preview-host"></div>
+  {{template "clock-script" .}}
+</body>
+</html>
+{{end}}

@@ -9,25 +9,7 @@
   <link href="/static/css/app.css" rel="stylesheet">
 </head>
 <body class="pos-screen">
-  <header class="pos-topbar">
-    <div class="brand-lockup">
-      <div class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path d="M7 10.5c-1.7-.4-3-1.7-3-3.4C4 5.2 5.6 3.8 7.5 4c.7-1.6 2.2-2.6 4-2.6s3.4 1 4 2.6c1.9-.2 3.5 1.2 3.5 3.1 0 1.7-1.3 3-3 3.4"></path>
-          <path d="M7 10.5h10l-.7 9.5H7.7z"></path>
-          <path d="M8.5 14h7"></path>
-        </svg>
-      </div>
-      <div>
-        <h1>Menu Admin</h1>
-        <span>Bill of Fare v{{.AppVersion}}</span>
-      </div>
-    </div>
-    <div class="topbar-actions">
-      <time class="topbar-clock" id="topbar-clock" datetime="">--:--</time>
-      <a class="topbar-link" href="/">Home / POS</a>
-    </div>
-  </header>
+  {{template "app-header" .}}
 
   <main class="admin-shell">
     <section class="admin-panel admin-action-panel">
@@ -39,7 +21,6 @@
         <div class="admin-action-buttons">
           <button class="admin-primary-button" type="button" data-open-modal="admin-manage-categories-modal">Manage Categories</button>
           <button class="admin-secondary-button" type="button" data-open-modal="admin-item-modal">Add Item</button>
-          <button class="admin-secondary-button" type="button" data-open-modal="admin-invoices-modal">Past Invoices</button>
           <button class="admin-secondary-button" type="button" data-open-modal="admin-settings-modal">Settings</button>
         </div>
       </div>
@@ -238,45 +219,6 @@
     </div>
   </dialog>
 
-  <dialog class="admin-modal admin-invoices-modal" id="admin-invoices-modal" aria-labelledby="admin-invoices-title">
-    <div class="admin-modal-shell">
-      <div class="admin-modal-header">
-        <div>
-          <p id="admin-invoices-title">Past Invoices</p>
-          <span>{{len .Invoices}} recent invoices</span>
-        </div>
-        <div class="admin-modal-actions">
-          <a class="admin-secondary-button" href="/admin/invoices/export">Export CSV</a>
-          <form method="dialog">
-            <button class="modal-close" aria-label="Close">&times;</button>
-          </form>
-        </div>
-      </div>
-      <div class="admin-invoice-list">
-        {{if .Invoices}}
-        <div class="admin-invoice-head">
-          <span>Invoice</span>
-          <span>Date</span>
-          <span>Items</span>
-          <span>Total</span>
-          <span>View</span>
-        </div>
-        {{range .Invoices}}
-        <div class="admin-invoice-row">
-          <span>#{{.ID}}</span>
-          <span>{{.CreatedAt.Format "2006-01-02 15:04"}}</span>
-          <span>{{.ItemCount}}</span>
-          <strong>₹{{.Total}}</strong>
-          <a href="/invoice?id={{.ID}}" target="_blank" rel="noopener">View</a>
-        </div>
-        {{end}}
-        {{else}}
-        <div class="admin-empty-row">No invoices yet</div>
-        {{end}}
-      </div>
-    </div>
-  </dialog>
-
   <dialog class="admin-modal admin-modal-narrow" id="admin-settings-modal" aria-labelledby="admin-settings-title">
     <div class="admin-modal-shell">
       <div class="admin-modal-header">
@@ -379,17 +321,8 @@
       });
     })();
 
-    (() => {
-      const clock = document.getElementById("topbar-clock");
-      const updateClock = () => {
-        const now = new Date();
-        clock.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        clock.setAttribute("datetime", now.toISOString());
-      };
-      updateClock();
-      setInterval(updateClock, 30000);
-    })();
   </script>
+  {{template "clock-script" .}}
 </body>
 </html>
 {{end}}

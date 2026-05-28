@@ -59,6 +59,18 @@ func (s *CartService) Add(session string, item models.MenuItem) {
 	c.items[key] = &models.CartItem{Key: key, MenuItem: item, Quantity: 1, Subtotal: item.Price}
 }
 
+func (s *CartService) Toggle(session string, item models.MenuItem) {
+	c := s.ensure(session)
+	key := fmt.Sprintf("%d", item.ID)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := c.items[key]; ok {
+		delete(c.items, key)
+		return
+	}
+	c.items[key] = &models.CartItem{Key: key, MenuItem: item, Quantity: 1, Subtotal: item.Price}
+}
+
 func (s *CartService) ChangeQty(session, key string, delta int) {
 	c := s.ensure(session)
 	s.mu.Lock()

@@ -2,7 +2,11 @@
 
 @media (max-width: 1160px) {
   .pos-layout {
-    grid-template-columns: minmax(0, 1fr) 310px;
+    --order-pane-width: 288px;
+  }
+
+  .menu-pane {
+    grid-template-columns: 132px minmax(0, 1fr);
   }
 
   .menu-grid {
@@ -15,12 +19,41 @@
 }
 
 @media (max-width: 860px) {
+  .pos-topbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .app-tabs,
+  .topbar-actions {
+    justify-content: flex-start;
+  }
+
   .pos-layout {
     display: block;
   }
 
   .menu-pane {
+    display: block;
+    height: auto;
     border-right: 0;
+  }
+
+  .category-tabs {
+    position: sticky;
+    top: 0;
+    flex-direction: row;
+    gap: 10px;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .category-tab {
+    width: auto;
   }
 
   .order-pane {
@@ -29,8 +62,14 @@
     border-top: 1px solid var(--line);
   }
 
+  .order-resize-handle {
+    display: none;
+  }
+
   .menu-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    height: auto;
+    overflow: visible;
   }
 
   .category-items {
@@ -50,6 +89,23 @@
     min-width: 0;
     width: 100%;
   }
+
+  .sales-page-header {
+    display: grid;
+  }
+
+  .sales-page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sales-history-panel {
+    overflow-x: auto;
+  }
+
+  .sales-history-head,
+  .sales-history-row {
+    min-width: 680px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -61,22 +117,16 @@
     font-size: 16px;
   }
 
-  .service-chip {
-    display: none;
+  .app-tabs {
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
   }
 
-  .sales-button {
+  .app-tab {
+    min-width: 74px;
     min-height: 32px;
-    padding: 0 11px;
-  }
-
-  .topbar-link {
-    min-height: 32px;
-    padding: 0 11px;
-  }
-
-  .category-tabs {
-    padding: 10px 12px;
+    padding: 0 10px;
   }
 
   .menu-grid {
@@ -86,14 +136,6 @@
 
   .category-items {
     grid-template-columns: 1fr;
-  }
-
-  .sales-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .sales-metric-wide {
-    grid-column: auto;
   }
 
   .admin-action-buttons {
@@ -110,7 +152,7 @@
 
   .admin-table-head,
   .admin-table-row {
-    grid-template-columns: 1.2fr 1.6fr 1fr 110px 42px 42px;
+    grid-template-columns: 1.1fr 1.7fr 0.9fr 112px 96px 96px 42px 42px;
   }
 
   .invoice-preview-header {
@@ -164,6 +206,10 @@
 }
 
 @media print {
+  * {
+    visibility: hidden;
+  }
+
   body {
     margin: 0;
     padding: 0;
@@ -171,38 +217,65 @@
     background: #ffffff;
   }
 
-  .receipt-58mm {
+  .invoice-preview-modal,
+  .invoice-preview-modal *,
+  .invoice-preview-receipt,
+  .invoice-preview-receipt * {
+    visibility: visible;
+  }
+
+  .invoice-preview-modal {
+    position: static;
+    width: 58mm;
+    max-width: 58mm;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: #ffffff;
+    box-shadow: none;
+  }
+
+  .invoice-preview-modal::backdrop,
+  .invoice-preview-header {
+    display: none;
+  }
+
+  .invoice-preview-shell {
+    display: block;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .invoice-preview-receipt {
     margin: 0;
     padding: 1.5mm;
     width: 58mm;
     max-width: 58mm;
-    border-radius: 0;
-    box-shadow: none;
+    max-height: none;
+    overflow: visible;
+    background: #ffffff;
     font-size: 11px;
   }
 
-  .receipt-heading h6 {
+  .invoice-preview-restaurant h3 {
     font-size: 14px;
   }
 
-  .receipt-divider {
+  .invoice-preview-rule {
     margin: 10px 0 8px;
   }
 
-  .receipt-table th,
-  .receipt-table td {
-    padding: 2px 0;
-  }
-
-  .receipt-table td span {
+  .invoice-preview-line span {
     font-size: 9px;
   }
 
-  .total-row {
+  .invoice-preview-total {
     font-size: 13px;
   }
 
-  .receipt-thanks {
+  .invoice-preview-thanks {
     margin-top: 12px;
     font-size: 11px;
   }
